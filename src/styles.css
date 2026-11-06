@@ -1,0 +1,43 @@
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(#fafafa, #0f1115);
+  --surface: light-dark(#ffffff, #161920);
+  --surface-hover: light-dark(#f3f4f6, #1e222b);
+  --border: light-dark(#e5e7eb, #262b36);
+  --border-focus: light-dark(#2563eb, #60a5fa);
+  --text: light-dark(#111827, #f3f4f6);
+  --text-muted: light-dark(#6b7280, #9ca3af);
+  --accent: light-dark(#2563eb, #60a5fa);
+  --tag-bg: light-dark(#f3f4f6, #232834);
+  --tag-text: light-dark(#374151, #d1d5db);
+  --tag-active-bg: light-dark(#dbeafe, #1e3a8a);
+  --tag-active-text: light-dark(#1d4ed8, #93c5fd);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Segoe UI Symbol',
+    'Noto Color Emoji',
+    sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}

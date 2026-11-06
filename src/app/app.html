@@ -1,0 +1,99 @@
+<header class="top-bar">
+  <div class="top-bar-inner">
+    <search class="filter-bar" aria-label="Lesezeichen filtern">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="8.5" cy="8.5" r="5.5" />
+        <path d="M13 13l4 4" stroke-linecap="round" />
+      </svg>
+      <input
+        #searchInput
+        type="search"
+        class="filter-input"
+        data-testid="filter-input"
+        placeholder="Lesezeichen nach Name, Tag, Beschreibung oder Kategorie filtern..."
+        aria-label="Lesezeichen filtern"
+        autocomplete="off"
+        spellcheck="false"
+        [value]="filterQuery()"
+        (input)="updateFilter($event)"
+      />
+      @if (filterQuery()) {
+        <button
+          type="button"
+          class="clear-btn"
+          data-testid="clear-filter-button"
+          (click)="clearFilter()"
+          aria-label="Filter zurücksetzen"
+        >
+          Zurücksetzen
+        </button>
+      } @else {
+        <kbd class="shortcut-hint" aria-hidden="true">/</kbd>
+      }
+    </search>
+  </div>
+</header>
+
+<main class="container">
+  @if (bookmarksResource.isLoading()) {
+    <p class="status-message" data-testid="loading-state" role="status">Lesezeichen werden geladen…</p>
+  } @else if (bookmarksResource.error()) {
+    <p class="status-message error" data-testid="error-state" role="alert">
+      Lesezeichen konnten nicht aus <code>bookmarks.json</code> geladen werden.
+    </p>
+  } @else if (filteredCategories().length === 0) {
+    <div class="empty-state" data-testid="empty-state">
+      <p>Keine Lesezeichen gefunden für <strong>"{{ filterQuery() }}"</strong>.</p>
+      @if (filterQuery()) {
+        <button
+          type="button"
+          class="reset-btn"
+          data-testid="reset-filter-button"
+          (click)="clearFilter()"
+        >
+          Alle Lesezeichen anzeigen
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="categories-list" data-testid="categories-list">
+      @for (group of filteredCategories(); track group.category) {
+        <section class="category-group" data-testid="category-group">
+          <h2 class="category-heading" data-testid="category-heading">{{ group.category }}</h2>
+          <ul class="bookmark-list">
+            @for (bookmark of group.bookmarks; track bookmark.url) {
+              <li class="bookmark-item" data-testid="bookmark-item">
+                <a
+                  class="bookmark-link"
+                  data-testid="bookmark-link"
+                  [href]="bookmark.url"
+                  [attr.title]="bookmark.description || null"
+                >
+                  <div class="bookmark-main">
+                    <span class="bookmark-name" data-testid="bookmark-name">{{ bookmark.name }}</span>
+                    <span class="bookmark-host">{{ formatHostname(bookmark.url) }}</span>
+                  </div>
+                </a>
+                @if (bookmark.tags?.length) {
+                  <div class="bookmark-tags" data-testid="bookmark-tags">
+                    @for (tag of bookmark.tags; track tag) {
+                      <button
+                        type="button"
+                        class="tag-pill"
+                        [class.active]="isTagActive(tag)"
+                        data-testid="bookmark-tag"
+                        (click)="toggleTag(tag)"
+                      >
+                        {{ tag }}
+                      </button>
+                    }
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  }
+</main>

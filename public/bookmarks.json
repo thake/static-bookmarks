@@ -1,0 +1,66 @@
+{
+  "Development & Docs": [
+    {
+      "name": "📖 Angular Dokumentation",
+      "url": "https://angular.dev",
+      "description": "Offizielle Dokumentation, Anleitungen und API-Referenz für modernes Angular.",
+      "tags": ["angular", "frontend", "typescript"]
+    },
+    {
+      "name": "🌐 MDN Web Docs",
+      "url": "https://developer.mozilla.org",
+      "description": "Umfassende Ressourcen für Webstandards, HTML, CSS und JavaScript.",
+      "tags": ["web", "reference", "docs"]
+    },
+    {
+      "name": "📘 TypeScript Handbuch",
+      "url": "https://www.typescriptlang.org/docs/",
+      "description": "Vollständiges Handbuch zum TypeScript-Typsystem und Sprachfunktionen.",
+      "tags": ["typescript", "javascript", "docs"]
+    },
+    {
+      "name": "🐙 GitHub",
+      "url": "https://github.com",
+      "description": "Code-Hosting, Pull-Requests und Open-Source-Repositories.",
+      "tags": ["git", "code"]
+    }
+  ],
+  "Tools & Utilities": [
+    {
+      "name": "🛠️ Regex101",
+      "url": "https://regex101.com",
+      "description": "Interaktiver Tester und Debugger für reguläre Ausdrücke.",
+      "tags": ["regex", "tools"]
+    },
+    {
+      "name": "📊 Can I Use",
+      "url": "https://caniuse.com",
+      "description": "Aktuelle Tabellen zur Browserunterstützung moderner Webtechnologien.",
+      "tags": ["browsers", "css", "html"]
+    },
+    {
+      "name": "🎨 Excalidraw",
+      "url": "https://excalidraw.com",
+      "description": "Virtuelles Whiteboard für handgezeichnet wirkende Skizzen und Diagramme.",
+      "tags": ["diagrams", "design"]
+    }
+  ],
+  "Reading & Community": [
+    {
+      "name": "📰 Hacker News",
+      "url": "https://news.ycombinator.com",
+      "description": "Social News Website mit Fokus auf Informatik und Unternehmertum.",
+      "tags": ["news", "tech"]
+    },
+    {
+      "name": "🚀 web.dev",
+      "url": "https://web.dev",
+      "description": "Leitfäden und moderne Best Practices für das Web.",
+      "tags": ["web", "performance"]
+    },
+    {
+      "name": "🦞 Lobsters",
+      "url": "https://lobste.rs"
+    }
+  ]
+}
