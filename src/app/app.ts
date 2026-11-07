@@ -1,30 +1,30 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   computed,
   signal,
-  viewChild,
 } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { BookmarkCategoryGroup, BookmarksMap } from './bookmark.model';
+import { FilterBar } from './filter-bar/filter-bar';
+import { BookmarkItem } from './bookmark-item/bookmark-item';
 
 @Component({
   selector: 'app-root',
-  imports: [],
+  imports: [FilterBar, BookmarkItem],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    '(window:keydown)': 'onWindowKeydown($event)',
-  },
 })
 export class App {
   readonly bookmarksResource = httpResource<BookmarksMap>(() => './bookmarks.json');
 
   readonly filterQuery = signal('');
 
-  readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
+  readonly filterTokens = computed(() => {
+    const raw = this.filterQuery().trim().toLowerCase();
+    return raw ? raw.split(/\s+/).filter(Boolean) : [];
+  });
 
   readonly categories = computed<BookmarkCategoryGroup[]>(() => {
     const data = this.bookmarksResource.value();
@@ -49,13 +49,11 @@ export class App {
 
   readonly filteredCategories = computed<BookmarkCategoryGroup[]>(() => {
     const allCategories = this.categories();
-    const rawQuery = this.filterQuery().trim().toLowerCase();
+    const tokens = this.filterTokens();
 
-    if (!rawQuery) {
+    if (tokens.length === 0) {
       return allCategories.filter((group) => group.bookmarks.length > 0);
     }
-
-    const tokens = rawQuery.split(/\s+/).filter(Boolean);
 
     return allCategories
       .map((group) => {
@@ -73,16 +71,6 @@ export class App {
       .filter((group) => group.bookmarks.length > 0);
   });
 
-  updateFilter(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.filterQuery.set(target.value);
-  }
-
-  clearFilter(): void {
-    this.filterQuery.set('');
-    this.searchInput()?.nativeElement.focus();
-  }
-
   toggleTag(tag: string): void {
     const current = this.filterQuery().trim().toLowerCase();
     if (current === tag.toLowerCase()) {
@@ -92,30 +80,7 @@ export class App {
     }
   }
 
-  isTagActive(tag: string): boolean {
-    return this.filterQuery().trim().toLowerCase() === tag.toLowerCase();
-  }
-
-  formatHostname(url: string): string {
-    try {
-      return new URL(url).hostname.replace(/^www\./, '');
-    } catch {
-      return url;
-    }
-  }
-
-  onWindowKeydown(event: KeyboardEvent): void {
-    const target = event.target as HTMLElement | null;
-    const isInputFocused =
-      target?.tagName === 'INPUT' ||
-      target?.tagName === 'TEXTAREA' ||
-      target?.isContentEditable;
-
-    if (event.key === '/' && !isInputFocused) {
-      event.preventDefault();
-      this.searchInput()?.nativeElement.focus();
-    } else if (event.key === 'Escape' && this.filterQuery()) {
-      this.filterQuery.set('');
-    }
+  clearFilter(): void {
+    this.filterQuery.set('');
   }
 }

@@ -84,7 +84,7 @@ describe('App (Static Bookmarks)', () => {
     expect(el.querySelectorAll('a button').length).toBe(0);
   });
 
-  it('should render optional description as native browser title attribute and optional tags only when present', async () => {
+  it('should render optional description as native browser title attribute and optional tags initially hidden behind +N button', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 
@@ -96,22 +96,91 @@ describe('App (Static Bookmarks)', () => {
     const items = Array.from(el.querySelectorAll('[data-testid="bookmark-item"]'));
     expect(items.length).toBe(4);
 
-    // First bookmark has description in native title attribute and 3 tags
+    // First bookmark has description in native title attribute and 3 tags (initially hidden with +3 button)
     expect(items[0].querySelector('[data-testid="bookmark-link"]')?.getAttribute('title')).toBe(
       'Official documentation, guides, and API reference for modern Angular.'
     );
-    // Custom tooltip element should not exist
     expect(items[0].querySelector('.bookmark-tooltip')).toBeNull();
+
+    // Initially, tags are hidden and +3 button is shown
+    expect(items[0].querySelectorAll('[data-testid="bookmark-tag"]').length).toBe(0);
+    const expandBtn = items[0].querySelector<HTMLButtonElement>('[data-testid="expand-tags-button"]')!;
+    expect(expandBtn).toBeTruthy();
+    expect(expandBtn.textContent?.trim()).toBe('+3');
+
+    // Clicking +3 reveals the 3 tags
+    expandBtn.click();
+    fixture.detectChanges();
 
     const firstItemTags = Array.from(items[0].querySelectorAll('[data-testid="bookmark-tag"]')).map(
       (t) => t.textContent?.trim()
     );
     expect(firstItemTags).toEqual(['angular', 'frontend', 'typescript']);
 
-    // Fourth bookmark has neither description nor tags
+    // Fourth bookmark has neither description nor tags nor expand button
     expect(items[3].querySelector('[data-testid="bookmark-link"]')?.getAttribute('title')).toBeNull();
     expect(items[3].querySelector('.bookmark-tooltip')).toBeNull();
     expect(items[3].querySelectorAll('[data-testid="bookmark-tag"]').length).toBe(0);
+    expect(items[3].querySelector('[data-testid="expand-tags-button"]')).toBeNull();
+  });
+
+  it('should hide tags initially, display matching tags before +N when filtered, and allow expanding/collapsing', async () => {
+    const dataWithManyTags: BookmarksMap = {
+      'Tagged Bookmarks': [
+        {
+          name: 'Many Tags Bookmark',
+          url: 'https://example.com/many-tags',
+          tags: ['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8'],
+        },
+      ],
+    };
+
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    fixture.detectChanges();
+
+    flushBookmarks(dataWithManyTags);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const item = el.querySelector('[data-testid="bookmark-item"]')!;
+
+    // Initially: tags completely hidden, +8 button present
+    expect(item.querySelectorAll('[data-testid="bookmark-tag"]').length).toBe(0);
+    const toggleBtn = item.querySelector<HTMLButtonElement>('[data-testid="expand-tags-button"]')!;
+    expect(toggleBtn).toBeTruthy();
+    expect(toggleBtn.textContent?.trim()).toBe('+8');
+
+    // Filter for "tag2": tag2 matches and appears before +N (now +7)
+    app.filterQuery.set('tag2');
+    fixture.detectChanges();
+
+    const matchingTags = Array.from(item.querySelectorAll('[data-testid="bookmark-tag"]')).map(
+      (t) => t.textContent?.trim()
+    );
+    expect(matchingTags).toEqual(['tag2']);
+    expect(toggleBtn.textContent?.trim()).toBe('+7');
+
+    // Clicking "+7" expands all 8 tags
+    toggleBtn.click();
+    fixture.detectChanges();
+
+    const tagsExpanded = Array.from(item.querySelectorAll('[data-testid="bookmark-tag"]')).map(
+      (t) => t.textContent?.trim()
+    );
+    expect(tagsExpanded).toEqual(['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8']);
+    expect(toggleBtn.textContent?.trim()).toBe('−');
+
+    // Clicking "−" collapses back to only the matching tag and +7
+    toggleBtn.click();
+    fixture.detectChanges();
+
+    const tagsCollapsed = Array.from(item.querySelectorAll('[data-testid="bookmark-tag"]')).map(
+      (t) => t.textContent?.trim()
+    );
+    expect(tagsCollapsed).toEqual(['tag2']);
+    expect(toggleBtn.textContent?.trim()).toBe('+7');
   });
 
   it('should instantly filter bookmarks by name, description, url, tag, and category name', async () => {
@@ -172,6 +241,11 @@ describe('App (Static Bookmarks)', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
+    // Expand tags for the first item
+    const expandBtn = el.querySelector<HTMLButtonElement>('[data-testid="expand-tags-button"]')!;
+    expandBtn.click();
+    fixture.detectChanges();
+
     const firstTag = el.querySelector<HTMLButtonElement>('[data-testid="bookmark-tag"]')!;
     expect(firstTag.textContent?.trim()).toBe('angular');
 

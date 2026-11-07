@@ -1,0 +1,126 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { BookmarkItem } from './bookmark-item';
+
+describe('BookmarkItem', () => {
+  let fixture: ComponentFixture<BookmarkItem>;
+  let component: BookmarkItem;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [BookmarkItem],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(BookmarkItem);
+    component = fixture.componentInstance;
+  });
+
+  it('should render bookmark name, url host, and description as title attribute', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Test Bookmark',
+      url: 'https://sub.example.com/path',
+      description: 'A helpful description',
+    });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const link = el.querySelector<HTMLAnchorElement>('[data-testid="bookmark-link"]')!;
+    expect(link.getAttribute('href')).toBe('https://sub.example.com/path');
+    expect(link.getAttribute('title')).toBe('A helpful description');
+    expect(el.querySelector('[data-testid="bookmark-name"]')?.textContent?.trim()).toBe('Test Bookmark');
+    expect(el.querySelector('.bookmark-host')?.textContent?.trim()).toBe('sub.example.com');
+  });
+
+  it('should hide tags initially with +N button and expand when toggled', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Tagged Item',
+      url: 'https://example.com',
+      tags: ['alpha', 'beta', 'gamma'],
+    });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelectorAll('[data-testid="bookmark-tag"]').length).toBe(0);
+
+    const toggleBtn = el.querySelector<HTMLButtonElement>('[data-testid="expand-tags-button"]')!;
+    expect(toggleBtn.textContent?.trim()).toBe('+3');
+
+    toggleBtn.click();
+    fixture.detectChanges();
+
+    expect(el.querySelectorAll('[data-testid="bookmark-tag"]').length).toBe(3);
+    expect(toggleBtn.textContent?.trim()).toBe('−');
+  });
+
+  it('should display matching tags before +N button when filter tokens are present', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Searchable Item',
+      url: 'https://example.com',
+      tags: ['frontend', 'backend', 'fullstack'],
+    });
+    fixture.componentRef.setInput('filterTokens', ['end']);
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const tagElements = Array.from(el.querySelectorAll('[data-testid="bookmark-tag"]')).map(
+      (t) => t.textContent?.trim()
+    );
+    // 'frontend' and 'backend' contain 'end'
+    expect(tagElements).toEqual(['frontend', 'backend']);
+
+    const toggleBtn = el.querySelector<HTMLButtonElement>('[data-testid="expand-tags-button"]')!;
+    expect(toggleBtn.textContent?.trim()).toBe('+1');
+  });
+
+  it('should emit tagClick when a tag pill is clicked', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Clickable Tags',
+      url: 'https://example.com',
+      tags: ['angular'],
+    });
+    fixture.componentRef.setInput('filterTokens', ['angular']);
+    fixture.detectChanges();
+
+    let clickedTag = '';
+    component.tagClick.subscribe((t) => (clickedTag = t));
+
+    const el = fixture.nativeElement as HTMLElement;
+    const tag = el.querySelector<HTMLButtonElement>('[data-testid="bookmark-tag"]')!;
+    tag.click();
+
+    expect(clickedTag).toBe('angular');
+  });
+
+  it('should set accessibility aria-label and aria-pressed attributes on tag pills', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Accessible Tags',
+      url: 'https://example.com',
+      tags: ['angular', 'signals'],
+    });
+    fixture.componentRef.setInput('activeTag', 'angular');
+    component.isExpanded.set(true);
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const tags = el.querySelectorAll<HTMLButtonElement>('[data-testid="bookmark-tag"]');
+    expect(tags[0].getAttribute('aria-label')).toBe("Nach Tag angular filtern");
+    expect(tags[0].getAttribute('aria-pressed')).toBe('true');
+    expect(tags[1].getAttribute('aria-label')).toBe("Nach Tag signals filtern");
+    expect(tags[1].getAttribute('aria-pressed')).toBe('false');
+
+    const toggleBtn = el.querySelector<HTMLButtonElement>('[data-testid="expand-tags-button"]')!;
+    expect(toggleBtn.getAttribute('aria-label')).toBe('Tags einklappen');
+  });
+
+  it('should safely render bookmarks with duplicate tags without throwing error', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Duplicate Tags',
+      url: 'https://example.com',
+      tags: ['duplicate', 'duplicate'],
+    });
+    component.isExpanded.set(true);
+    expect(() => fixture.detectChanges()).not.toThrow();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelectorAll('[data-testid="bookmark-tag"]').length).toBe(2);
+  });
+});

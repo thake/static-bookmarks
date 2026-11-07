@@ -4,25 +4,25 @@
       "name": "📖 Angular Dokumentation",
       "url": "https://angular.dev",
       "description": "Offizielle Dokumentation, Anleitungen und API-Referenz für modernes Angular.",
-      "tags": ["angular", "frontend", "typescript"]
+      "tags": ["angular", "frontend", "typescript", "signals", "web", "framework"]
     },
     {
       "name": "🌐 MDN Web Docs",
-      "url": "https://developer.mozilla.org",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled",
       "description": "Umfassende Ressourcen für Webstandards, HTML, CSS und JavaScript.",
-      "tags": ["web", "reference", "docs"]
+      "tags": ["javascript", "web", "reference", "docs", "standards", "html", "css", "async"]
     },
     {
       "name": "📘 TypeScript Handbuch",
-      "url": "https://www.typescriptlang.org/docs/",
+      "url": "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html",
       "description": "Vollständiges Handbuch zum TypeScript-Typsystem und Sprachfunktionen.",
-      "tags": ["typescript", "javascript", "docs"]
+      "tags": ["typescript", "types", "compiler", "handbook", "javascript", "docs"]
     },
     {
       "name": "🐙 GitHub",
       "url": "https://github.com",
       "description": "Code-Hosting, Pull-Requests und Open-Source-Repositories.",
-      "tags": ["git", "code"]
+      "tags": ["git", "code", "vcs"]
     }
   ],
   "Tools & Utilities": [
@@ -30,19 +30,19 @@
       "name": "🛠️ Regex101",
       "url": "https://regex101.com",
       "description": "Interaktiver Tester und Debugger für reguläre Ausdrücke.",
-      "tags": ["regex", "tools"]
+      "tags": ["regex", "tools", "debugger", "testing"]
     },
     {
-      "name": "📊 Can I Use",
-      "url": "https://caniuse.com",
+      "name": "📊 Can I Use Browser Support Tables",
+      "url": "https://caniuse.com/ciu/comparison/long-custom-parameter-path-for-checking-browser-compatibility-features",
       "description": "Aktuelle Tabellen zur Browserunterstützung moderner Webtechnologien.",
-      "tags": ["browsers", "css", "html"]
+      "tags": ["browsers", "compatibility", "css", "html", "specs", "tables", "support"]
     },
     {
       "name": "🎨 Excalidraw",
       "url": "https://excalidraw.com",
       "description": "Virtuelles Whiteboard für handgezeichnet wirkende Skizzen und Diagramme.",
-      "tags": ["diagrams", "design"]
+      "tags": ["diagrams", "design", "whiteboard", "canvas"]
     }
   ],
   "Reading & Community": [
@@ -50,13 +50,13 @@
       "name": "📰 Hacker News",
       "url": "https://news.ycombinator.com",
       "description": "Social News Website mit Fokus auf Informatik und Unternehmertum.",
-      "tags": ["news", "tech"]
+      "tags": ["news", "tech", "startup", "community"]
     },
     {
-      "name": "🚀 web.dev",
-      "url": "https://web.dev",
+      "name": "🚀 web.dev Modern Web Guidance & Core Web Vitals",
+      "url": "https://web.dev/explore/fast",
       "description": "Leitfäden und moderne Best Practices für das Web.",
-      "tags": ["web", "performance"]
+      "tags": ["performance", "cwv", "lcp", "web", "guidance"]
     },
     {
       "name": "🦞 Lobsters",

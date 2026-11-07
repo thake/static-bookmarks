@@ -1,0 +1,41 @@
+<a
+  class="bookmark-link"
+  data-testid="bookmark-link"
+  [href]="bookmark().url"
+  [attr.title]="bookmark().description || null"
+>
+  <div class="bookmark-main">
+    <span class="bookmark-name" data-testid="bookmark-name">{{ bookmark().name }}</span>
+    <span class="bookmark-host">{{ hostname() }}</span>
+  </div>
+</a>
+@if (bookmark().tags?.length) {
+  <div class="bookmark-tags" data-testid="bookmark-tags">
+    @for (tag of displayedTags(); track $index) {
+      <button
+        type="button"
+        class="tag-pill"
+        [class.active]="activeTag().trim().toLowerCase() === tag.trim().toLowerCase()"
+        [attr.aria-pressed]="activeTag().trim().toLowerCase() === tag.trim().toLowerCase()"
+        [attr.aria-label]="'Nach Tag ' + tag + ' filtern'"
+        data-testid="bookmark-tag"
+        (click)="onTagClick(tag)"
+      >
+        {{ tag }}
+      </button>
+    }
+    @if (hiddenCount() > 0 || isExpanded()) {
+      <button
+        type="button"
+        class="tag-pill tag-toggle"
+        data-testid="expand-tags-button"
+        [attr.aria-expanded]="isExpanded()"
+        [attr.aria-label]="isExpanded() ? 'Tags einklappen' : 'Alle ' + bookmark().tags?.length + ' Tags anzeigen'"
+        (click)="toggleExpanded($event)"
+        [title]="isExpanded() ? 'Tags einklappen' : 'Alle ' + bookmark().tags?.length + ' Tags anzeigen'"
+      >
+        {{ isExpanded() ? '−' : '+' + hiddenCount() }}
+      </button>
+    }
+  </div>
+}

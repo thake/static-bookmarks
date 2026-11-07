@@ -41,3 +41,20 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
+
+.top-bar-inner,
+.container {
+  inline-size: min(92%, 75rem);
+  margin-inline: auto;
+}
+
+.container {
+  padding-block: 1.5rem 3rem;
+}
+
+@media (min-width: 768px) {
+  .top-bar-inner,
+  .container {
+    inline-size: min(75%, 75rem);
+  }
+}
