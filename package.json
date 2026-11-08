@@ -9,6 +9,7 @@
     "prebuild": "npm run fetch:favicons",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
+    "check:links": "node scripts/check-links.ts",
     "test:scripts": "node --test scripts/*.test.ts",
     "test": "npm run test:scripts && ng test",
     "e2e": "playwright test"
