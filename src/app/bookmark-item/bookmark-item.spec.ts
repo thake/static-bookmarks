@@ -123,4 +123,39 @@ describe('BookmarkItem', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('[data-testid="bookmark-tag"]').length).toBe(2);
   });
+
+  it('should render favicon img when faviconSrc is provided and switch to fallback SVG icon on error', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Favicon Test',
+      url: 'https://sub.domain.corp/tools',
+    });
+    fixture.componentRef.setInput('faviconSrc', 'favicons/1234567890ab.png');
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const faviconImg = el.querySelector<HTMLImageElement>('[data-testid="bookmark-favicon"]')!;
+    expect(faviconImg).toBeTruthy();
+    expect(faviconImg.getAttribute('src')).toBe('favicons/1234567890ab.png');
+
+    // Simulate image error (e.g. 404 or offline)
+    faviconImg.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+
+    expect(el.querySelector('[data-testid="bookmark-favicon"]')).toBeNull();
+    const fallbackSvg = el.querySelector('[data-testid="bookmark-favicon-fallback"]')!;
+    expect(fallbackSvg).toBeTruthy();
+  });
+
+  it('should render fallback SVG icon immediately when no faviconSrc is provided', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'No Favicon',
+      url: 'https://example.com/no-icon',
+    });
+    fixture.componentRef.setInput('faviconSrc', null);
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="bookmark-favicon"]')).toBeNull();
+    expect(el.querySelector('[data-testid="bookmark-favicon-fallback"]')).toBeTruthy();
+  });
 });

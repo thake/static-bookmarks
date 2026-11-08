@@ -93,6 +93,11 @@ test.describe('Static Bookmarks Application', () => {
     // Link should not contain bookmark icon
     await expect(firstLink.getByTestId('bookmark-icon')).toHaveCount(0);
 
+    // Favicon should be present and point to local static assets
+    const favicon = firstLink.getByTestId('bookmark-favicon');
+    await expect(favicon).toBeVisible();
+    await expect(favicon).toHaveAttribute('src', /^favicons\/[a-f0-9]+\.(ico|png|svg)$/);
+
     // Native browser tooltip via title attribute
     await expect(firstLink).toHaveAttribute(
       'title',

@@ -49,10 +49,17 @@ describe('App (Static Bookmarks)', () => {
     httpMock.verify();
   });
 
-  function flushBookmarks(data: BookmarksMap = MOCK_BOOKMARKS) {
+  function flushBookmarks(
+    data: BookmarksMap = MOCK_BOOKMARKS,
+    favicons: Record<string, string> = { 'https://angular.dev': 'favicons/angular.png' }
+  ) {
     const req = httpMock.expectOne('./bookmarks.json');
     expect(req.request.method).toBe('GET');
     req.flush(data);
+
+    const faviconsReq = httpMock.expectOne('./favicons.json');
+    expect(faviconsReq.request.method).toBe('GET');
+    faviconsReq.flush(favicons);
   }
 
   it('should load and display grouped bookmarks from ./bookmarks.json', async () => {

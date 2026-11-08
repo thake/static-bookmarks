@@ -18,8 +18,11 @@ import { BookmarkItem } from './bookmark-item/bookmark-item';
 })
 export class App {
   readonly bookmarksResource = httpResource<BookmarksMap>(() => './bookmarks.json');
+  readonly faviconsResource = httpResource<Record<string, string>>(() => './favicons.json');
 
   readonly filterQuery = signal('');
+
+  readonly faviconsMap = computed(() => this.faviconsResource.value() ?? {});
 
   readonly filterTokens = computed(() => {
     const raw = this.filterQuery().trim().toLowerCase();

@@ -20,12 +20,14 @@ import { Bookmark } from '../bookmark.model';
 })
 export class BookmarkItem {
   readonly bookmark = input.required<Bookmark>();
+  readonly faviconSrc = input<string | null>(null);
   readonly filterTokens = input<readonly string[]>([]);
   readonly activeTag = input<string>('');
 
   readonly tagClick = output<string>();
 
   readonly isExpanded = signal(false);
+  readonly faviconFailed = signal(false);
 
   readonly hostname = computed(() => {
     try {

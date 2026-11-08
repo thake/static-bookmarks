@@ -37,6 +37,7 @@
               <li
                 app-bookmark-item
                 [bookmark]="bookmark"
+                [faviconSrc]="faviconsMap()[bookmark.url] || null"
                 [filterTokens]="filterTokens()"
                 [activeTag]="filterQuery()"
                 (tagClick)="toggleTag($event)"

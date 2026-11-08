@@ -4,6 +4,22 @@
   [href]="bookmark().url"
   [attr.title]="bookmark().description || null"
 >
+  @if (faviconSrc() && !faviconFailed()) {
+    <img
+      class="bookmark-favicon"
+      data-testid="bookmark-favicon"
+      [src]="faviconSrc()!"
+      (error)="faviconFailed.set(true)"
+      width="16"
+      height="16"
+      alt=""
+      loading="lazy"
+    />
+  } @else {
+    <svg class="bookmark-favicon fallback-icon" data-testid="bookmark-favicon-fallback" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v13l-5-2.5L3 15V2z"/>
+    </svg>
+  }
   <div class="bookmark-main">
     <span class="bookmark-name" data-testid="bookmark-name">{{ bookmark().name }}</span>
     <span class="bookmark-host">{{ hostname() }}</span>
