@@ -50,8 +50,9 @@
                 [faviconSrc]="faviconsMap()[bookmark.url] || null"
                 [filterTokens]="filterTokens()"
                 [activeTag]="filterQuery()"
-                [isSelected]="selectedUrl() === bookmark.url"
+                [isSelected]="isItemSelected(group.category, bookmark.url)"
                 (tagClick)="toggleTag($event)"
+                (bookmarkClick)="onBookmarkClicked($event)"
               ></li>
             }
           </ul>

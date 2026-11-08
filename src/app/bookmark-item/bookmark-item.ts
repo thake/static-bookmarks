@@ -33,6 +33,7 @@ export class BookmarkItem {
   readonly isSelected = input<boolean>(false);
 
   readonly tagClick = output<string>();
+  readonly bookmarkClick = output<Bookmark>();
 
   readonly isExpanded = signal(false);
   readonly faviconFailed = signal(false);
@@ -88,6 +89,10 @@ export class BookmarkItem {
     event.preventDefault();
     event.stopPropagation();
     this.isExpanded.update((v) => !v);
+  }
+
+  onLinkClick(): void {
+    this.bookmarkClick.emit(this.bookmark());
   }
 
   onTagClick(tag: string): void {

@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   signal,
 } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { BookmarkCategoryGroup, BookmarksMap } from './bookmark.model';
+import { Bookmark, BookmarkCategoryGroup, BookmarksMap, SearchableBookmark } from './bookmark.model';
 import { FilterBar } from './filter-bar/filter-bar';
 import { BookmarkItem } from './bookmark-item/bookmark-item';
+import { ClickTrackingService } from './click-tracking.service';
 
 @Component({
   selector: 'app-root',
@@ -20,6 +22,10 @@ import { BookmarkItem } from './bookmark-item/bookmark-item';
   },
 })
 export class App {
+  static readonly TOP_CATEGORY_NAME = 'Häufig von dir genutzt';
+
+  private readonly clickTracker = inject(ClickTrackingService);
+
   readonly bookmarksResource = httpResource<BookmarksMap>(() => './bookmarks.json');
   readonly faviconsResource = httpResource<Record<string, string>>(() => './favicons.json');
 
@@ -33,7 +39,7 @@ export class App {
     return raw ? raw.split(/\s+/).filter(Boolean) : [];
   });
 
-  readonly categories = computed<BookmarkCategoryGroup[]>(() => {
+  private readonly rawCategories = computed<BookmarkCategoryGroup[]>(() => {
     const data = this.bookmarksResource.value();
     if (!data) {
       return [];
@@ -52,6 +58,37 @@ export class App {
           .toLowerCase(),
       })),
     }));
+  });
+
+  readonly topBookmarks = computed<SearchableBookmark[]>(() => {
+    const counts = this.clickTracker.clickCounts();
+    const all = this.rawCategories().flatMap((g) => g.bookmarks);
+    const uniqueMap = new Map<string, SearchableBookmark>();
+    for (const b of all) {
+      if (!uniqueMap.has(b.url)) {
+        uniqueMap.set(b.url, b);
+      }
+    }
+
+    const clicked: Array<{ bookmark: SearchableBookmark; count: number }> = [];
+    for (const [url, b] of uniqueMap.entries()) {
+      const count = counts[url] || 0;
+      if (count > 0) {
+        clicked.push({ bookmark: b, count });
+      }
+    }
+
+    clicked.sort((a, b) => b.count - a.count);
+    return clicked.slice(0, 10).map((item) => item.bookmark);
+  });
+
+  readonly categories = computed<BookmarkCategoryGroup[]>(() => {
+    const raw = this.rawCategories();
+    const top = this.topBookmarks();
+    if (top.length === 0) {
+      return raw;
+    }
+    return [{ category: App.TOP_CATEGORY_NAME, bookmarks: top }, ...raw];
   });
 
   readonly filteredCategories = computed<BookmarkCategoryGroup[]>(() => {
@@ -78,15 +115,39 @@ export class App {
       .filter((group) => group.bookmarks.length > 0);
   });
 
-  readonly flatBookmarks = computed(() =>
-    this.filteredCategories().flatMap((group) => group.bookmarks)
+  readonly flatBookmarkItems = computed(() =>
+    this.filteredCategories().flatMap((group) =>
+      group.bookmarks.map((bookmark) => ({
+        category: group.category,
+        bookmark,
+        key: `${group.category}::${bookmark.url}`,
+      }))
+    )
   );
+
+  readonly flatBookmarks = computed(() =>
+    this.flatBookmarkItems().map((item) => item.bookmark)
+  );
+
+  readonly selectedItemKey = computed(() => {
+    const items = this.flatBookmarkItems();
+    const idx = this.selectedIndex();
+    return idx >= 0 && idx < items.length ? items[idx].key : null;
+  });
 
   readonly selectedUrl = computed(() => {
     const list = this.flatBookmarks();
     const idx = this.selectedIndex();
     return idx >= 0 && idx < list.length ? list[idx].url : null;
   });
+
+  isItemSelected(category: string, url: string): boolean {
+    return this.selectedItemKey() === `${category}::${url}`;
+  }
+
+  onBookmarkClicked(bookmark: Bookmark): void {
+    this.clickTracker.recordClick(bookmark.url);
+  }
 
   onQueryChange(value: string): void {
     this.filterQuery.set(value);
@@ -132,6 +193,7 @@ export class App {
   }
 
   openBookmark(url: string, newTab = false): void {
+    this.clickTracker.recordClick(url);
     if (newTab) {
       window.open(url, '_blank');
     } else {

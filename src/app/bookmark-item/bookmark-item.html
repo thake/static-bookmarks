@@ -3,6 +3,7 @@
   data-testid="bookmark-link"
   [href]="bookmark().url"
   [attr.title]="bookmark().description || null"
+  (click)="onLinkClick()"
 >
   @if (faviconSrc() && !faviconFailed()) {
     <img

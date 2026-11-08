@@ -637,5 +637,78 @@ test.describe('Static Bookmarks Application', () => {
     await page.waitForURL('https://regex101.com/**');
     expect(page.url()).toContain('regex101.com');
   });
+
+  test('dynamically shows "Häufig von dir genutzt" when bookmarks are clicked and updates localStorage', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const categories = page.getByTestId('category-heading');
+    await expect(categories).toHaveCount(2);
+    await expect(categories.first()).not.toHaveText('Häufig von dir genutzt');
+
+    // Prevent full page unload so we can verify the DOM updates reactively
+    await page.evaluate(() => {
+      document.addEventListener('click', (e) => {
+        const target = (e.target as HTMLElement).closest('a');
+        if (target) {
+          e.preventDefault();
+        }
+      });
+    });
+
+    const regexLink = page.locator('a[href="https://regex101.com"]').first();
+    await regexLink.click();
+
+    // "Häufig von dir genutzt" category appears dynamically at the top
+    await expect(categories).toHaveCount(3);
+    await expect(categories.first()).toHaveText('Häufig von dir genutzt');
+
+    const topSection = page.getByTestId('category-group').first();
+    await expect(topSection.locator('a[href="https://regex101.com"]')).toBeVisible();
+
+    // Verify localStorage persistence
+    const storedClicks = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('sb_bookmark_clicks') || '{}')
+    );
+    expect(storedClicks['https://regex101.com']).toBe(1);
+  });
+
+  test('navigates cleanly through "Häufig von dir genutzt" with row-isolated keyboard selection', async ({
+    page,
+  }) => {
+    // Pre-seed localStorage with clicks
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'sb_bookmark_clicks',
+        JSON.stringify({
+          'https://angular.dev': 5,
+        })
+      );
+    });
+
+    await page.goto('/');
+
+    const categories = page.getByTestId('category-heading');
+    await expect(categories.first()).toHaveText('Häufig von dir genutzt');
+
+    const items = page.getByTestId('bookmark-item');
+    // Top category has angular.dev (index 0)
+    // "Development & Docs" has angular.dev (index 1)
+    await expect(items).toHaveCount(5);
+
+    const filterInput = page.getByTestId('filter-input');
+    await expect(filterInput).toBeFocused();
+
+    // ArrowDown -> item 0 selected
+    await page.keyboard.press('ArrowDown');
+    await expect(items.nth(0)).toHaveClass(/selected/);
+    await expect(items.nth(1)).not.toHaveClass(/selected/);
+
+    // ArrowDown -> item 1 selected, item 0 unselected
+    await page.keyboard.press('ArrowDown');
+    await expect(items.nth(1)).toHaveClass(/selected/);
+    await expect(items.nth(0)).not.toHaveClass(/selected/);
+  });
 });
 

@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { App } from './app';
 import { BookmarksMap } from './bookmark.model';
+import { ClickTrackingService, CLICKS_STORAGE_KEY } from './click-tracking.service';
 
 const MOCK_BOOKMARKS: BookmarksMap = {
   'Development & Docs': [
@@ -37,6 +38,7 @@ describe('App (Static Bookmarks)', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [provideHttpClient(), provideHttpClientTesting()],
@@ -47,6 +49,7 @@ describe('App (Static Bookmarks)', () => {
 
   afterEach(() => {
     httpMock.verify();
+    localStorage.clear();
   });
 
   function flushBookmarks(
@@ -379,5 +382,191 @@ describe('App (Static Bookmarks)', () => {
     // Filter change resets selectedIndex
     app.onQueryChange('angular');
     expect(app.selectedIndex()).toBe(-1);
+  });
+
+  describe('Häufig von dir genutzt (Top Clicks category)', () => {
+    it('should not display "Häufig von dir genutzt" category when click counts are 0', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const categoryHeadings = Array.from(
+        el.querySelectorAll('[data-testid="category-heading"]')
+      ).map((h) => h.textContent?.trim());
+
+      expect(categoryHeadings).not.toContain(App.TOP_CATEGORY_NAME);
+      expect(categoryHeadings).toEqual(['Development & Docs', 'Tools & Utilities']);
+    });
+
+    it('should display "Häufig von dir genutzt" at the top when clicks exist, sorted descending and capped at 10', async () => {
+      // 12 bookmarks across 2 categories
+      const twelveBookmarks: BookmarksMap = {
+        Cat1: Array.from({ length: 6 }, (_, i) => ({
+          name: `Item A${i + 1}`,
+          url: `https://example.com/a${i + 1}`,
+        })),
+        Cat2: Array.from({ length: 6 }, (_, i) => ({
+          name: `Item B${i + 1}`,
+          url: `https://example.com/b${i + 1}`,
+        })),
+      };
+
+      // Set clicks for all 12 items with increasing click counts
+      const storedClicks: Record<string, number> = {};
+      for (let i = 1; i <= 6; i++) {
+        storedClicks[`https://example.com/a${i}`] = i; // a1=1 .. a6=6
+        storedClicks[`https://example.com/b${i}`] = i + 10; // b1=11 .. b6=16
+      }
+      localStorage.setItem(CLICKS_STORAGE_KEY, JSON.stringify(storedClicks));
+
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+
+      flushBookmarks(twelveBookmarks);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const categoryHeadings = Array.from(
+        el.querySelectorAll('[data-testid="category-heading"]')
+      ).map((h) => h.textContent?.trim());
+
+      // Prepend at the top
+      expect(categoryHeadings[0]).toBe(App.TOP_CATEGORY_NAME);
+
+      const topCategorySection = el.querySelectorAll('[data-testid="category-group"]')[0];
+      const topItems = Array.from(
+        topCategorySection.querySelectorAll('[data-testid="bookmark-link"]')
+      ).map((a) => a.getAttribute('href'));
+
+      // Capped at 10 items
+      expect(topItems.length).toBe(10);
+      // Top 10 descending by clicks: b6(16), b5(15), b4(14), b3(13), b2(12), b1(11), a6(6), a5(5), a4(4), a3(3)
+      expect(topItems).toEqual([
+        'https://example.com/b6',
+        'https://example.com/b5',
+        'https://example.com/b4',
+        'https://example.com/b3',
+        'https://example.com/b2',
+        'https://example.com/b1',
+        'https://example.com/a6',
+        'https://example.com/a5',
+        'https://example.com/a4',
+        'https://example.com/a3',
+      ]);
+    });
+
+    it('should filter items within "Häufig von dir genutzt" along with standard categories', async () => {
+      localStorage.setItem(
+        CLICKS_STORAGE_KEY,
+        JSON.stringify({
+          'https://angular.dev': 3,
+          'https://regex101.com': 1,
+        })
+      );
+
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelectorAll('[data-testid="category-heading"]')[0].textContent?.trim()).toBe(
+        App.TOP_CATEGORY_NAME
+      );
+
+      // Search for regex
+      app.onQueryChange('regex');
+      fixture.detectChanges();
+
+      const filteredHeadings = Array.from(
+        el.querySelectorAll('[data-testid="category-heading"]')
+      ).map((h) => h.textContent?.trim());
+
+      // Both "Häufig von dir genutzt" (containing Regex101) and "Tools & Utilities" match
+      expect(filteredHeadings).toEqual([App.TOP_CATEGORY_NAME, 'Tools & Utilities']);
+
+      const topLinks = Array.from(
+        el.querySelectorAll('[data-testid="category-group"]')[0].querySelectorAll('[data-testid="bookmark-link"]')
+      ).map((a) => a.getAttribute('href'));
+      expect(topLinks).toEqual(['https://regex101.com']);
+    });
+
+    it('should isolate selection highlight between "Häufig von dir genutzt" and original category during keyboard navigation', async () => {
+      localStorage.setItem(
+        CLICKS_STORAGE_KEY,
+        JSON.stringify({
+          'https://angular.dev': 5,
+        })
+      );
+
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const items = el.querySelectorAll('.bookmark-item');
+      // In top category: index 0 (angular.dev)
+      // In original category: index 1 (angular.dev), index 2 (MDN), etc.
+      expect(items.length).toBe(5);
+
+      // ArrowDown to item 0 ("Häufig von dir genutzt" -> angular.dev)
+      app.onNavigateDown();
+      fixture.detectChanges();
+
+      expect(app.selectedIndex()).toBe(0);
+      expect(items[0].classList.contains('selected')).toBe(true);
+      // Ensure the same bookmark in the original category is NOT marked as selected
+      expect(items[1].classList.contains('selected')).toBe(false);
+
+      // ArrowDown to item 1 ("Development & Docs" -> angular.dev)
+      app.onNavigateDown();
+      fixture.detectChanges();
+
+      expect(app.selectedIndex()).toBe(1);
+      expect(items[0].classList.contains('selected')).toBe(false);
+      expect(items[1].classList.contains('selected')).toBe(true);
+    });
+
+    it('should record click when bookmark item emits bookmarkClick and make top category appear', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="category-heading"]')?.textContent?.trim()).toBe(
+        'Development & Docs'
+      );
+
+      // Click on Regex101 link
+      const links = el.querySelectorAll<HTMLAnchorElement>('[data-testid="bookmark-link"]');
+      const regexLink = Array.from(links).find((a) => a.getAttribute('href') === 'https://regex101.com')!;
+      regexLink.click();
+      fixture.detectChanges();
+
+      // Top category should now appear
+      const headings = Array.from(
+        el.querySelectorAll('[data-testid="category-heading"]')
+      ).map((h) => h.textContent?.trim());
+      expect(headings[0]).toBe(App.TOP_CATEGORY_NAME);
+
+      // Verify localStorage was updated
+      const stored = JSON.parse(localStorage.getItem(CLICKS_STORAGE_KEY) || '{}');
+      expect(stored['https://regex101.com']).toBe(1);
+    });
   });
 });
