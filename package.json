@@ -10,6 +10,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "check:links": "node scripts/check-links.ts",
+    "bookmarks:format": "node scripts/format-bookmarks.ts",
     "test:scripts": "node --test scripts/*.test.ts",
     "test": "npm run test:scripts && ng test",
     "e2e": "playwright test"

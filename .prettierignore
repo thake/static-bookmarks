@@ -1,0 +1,7 @@
+# Build & cache artifacts
+dist/
+.angular/
+package-lock.json
+
+# Bookmarks is formatted in single-line tabular layout via scripts/format-bookmarks.ts
+public/bookmarks.json
