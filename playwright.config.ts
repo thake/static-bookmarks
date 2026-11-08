@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const port = process.env['PORT'] || '4200';
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -7,7 +9,7 @@ export default defineConfig({
   retries: 0,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:4200',
+    baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',
   },
   projects: [
@@ -17,8 +19,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npx ng serve --port 4200',
-    url: 'http://localhost:4200',
-    reuseExistingServer: !process.env['CI'],
+    command: `npx ng serve --port ${port}`,
+    url: `http://localhost:${port}`,
+    reuseExistingServer: !process.env['CI'] && !process.env['PORT'],
   },
 });

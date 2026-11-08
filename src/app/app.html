@@ -1,18 +1,49 @@
 <header class="top-bar">
   <div class="top-bar-inner">
-    <app-filter-bar
-      [query]="filterQuery()"
-      [hasSelection]="selectedIndex() >= 0"
-      (queryChange)="onQueryChange($event)"
-      (navigateDown)="onNavigateDown()"
-      (navigateUp)="onNavigateUp()"
-      (navigateHome)="onNavigateHome()"
-      (navigateEnd)="onNavigateEnd()"
-      (selectCurrent)="onSelectCurrent($event)"
-      (escapePressed)="onEscape()"
-    />
+    <div class="top-bar-filter">
+      <app-filter-bar
+        [query]="filterQuery()"
+        [hasSelection]="selectedIndex() >= 0"
+        (queryChange)="onQueryChange($event)"
+        (navigateDown)="onNavigateDown()"
+        (navigateUp)="onNavigateUp()"
+        (navigateHome)="onNavigateHome()"
+        (navigateEnd)="onNavigateEnd()"
+        (selectCurrent)="onSelectCurrent($event)"
+        (escapePressed)="onEscape()"
+      />
+    </div>
+    <button
+      type="button"
+      class="settings-btn"
+      data-testid="settings-button"
+      aria-label="Einstellungen öffnen"
+      title="Einstellungen"
+      (click)="openSettings()"
+    >
+      <svg
+        class="settings-icon"
+        viewBox="0 0 20 20"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="10" cy="10" r="3" />
+        <path
+          d="M16.2 12.3a1.4 1.4 0 0 0 .3 1.6l.1.1a1.6 1.6 0 0 1-2.3 2.3l-.1-.1a1.4 1.4 0 0 0-1.6-.3 1.4 1.4 0 0 0-.9 1.3v.3a1.6 1.6 0 0 1-3.2 0v-.2a1.4 1.4 0 0 0-.9-1.4 1.4 1.4 0 0 0-1.6.3l-.1.1a1.6 1.6 0 0 1-2.3-2.3l.1-.1a1.4 1.4 0 0 0 .3-1.6 1.4 1.4 0 0 0-1.3-.9H2.5a1.6 1.6 0 0 1 0-3.2h.2a1.4 1.4 0 0 0 1.4-.9 1.4 1.4 0 0 0-.3-1.6l-.1-.1a1.6 1.6 0 0 1 2.3-2.3l.1.1a1.4 1.4 0 0 0 1.6.3 1.4 1.4 0 0 0 .9-1.3V2.5a1.6 1.6 0 0 1 3.2 0v.2a1.4 1.4 0 0 0 .9 1.4 1.4 1.4 0 0 0 1.6-.3l.1-.1a1.6 1.6 0 0 1 2.3 2.3l-.1.1a1.4 1.4 0 0 0-.3 1.6 1.4 1.4 0 0 0 1.3.9h.3a1.6 1.6 0 0 1 0 3.2h-.2a1.4 1.4 0 0 0-1.4.9z"
+        />
+      </svg>
+    </button>
   </div>
 </header>
+
+<app-settings-modal
+  [(isOpen)]="isSettingsOpen"
+  (closed)="closeSettings()"
+/>
 
 <main class="container">
   @if (bookmarksResource.isLoading()) {

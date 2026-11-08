@@ -10,10 +10,12 @@ import { Bookmark, BookmarkCategoryGroup, BookmarksMap, SearchableBookmark } fro
 import { FilterBar } from './filter-bar/filter-bar';
 import { BookmarkItem } from './bookmark-item/bookmark-item';
 import { ClickTrackingService } from './click-tracking.service';
+import { SettingsService } from './settings.service';
+import { SettingsModal } from './settings-modal/settings-modal';
 
 @Component({
   selector: 'app-root',
-  imports: [FilterBar, BookmarkItem],
+  imports: [FilterBar, BookmarkItem, SettingsModal],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +27,9 @@ export class App {
   static readonly TOP_CATEGORY_NAME = 'Häufig von dir genutzt';
 
   private readonly clickTracker = inject(ClickTrackingService);
+  readonly settingsService = inject(SettingsService);
+
+  readonly isSettingsOpen = signal(false);
 
   readonly bookmarksResource = httpResource<BookmarksMap>(() => './bookmarks.json');
   readonly faviconsResource = httpResource<Record<string, string>>(() => './favicons.json');
@@ -84,6 +89,9 @@ export class App {
 
   readonly categories = computed<BookmarkCategoryGroup[]>(() => {
     const raw = this.rawCategories();
+    if (!this.settingsService.showTopUsedLinks()) {
+      return raw;
+    }
     const top = this.topBookmarks();
     if (top.length === 0) {
       return raw;
@@ -220,7 +228,19 @@ export class App {
     }
   }
 
+  openSettings(): void {
+    this.isSettingsOpen.set(true);
+  }
+
+  closeSettings(): void {
+    this.isSettingsOpen.set(false);
+  }
+
   onWindowKeydown(event: KeyboardEvent): void {
+    if (this.isSettingsOpen()) {
+      return;
+    }
+
     const target = event.target as HTMLElement | null;
     const isInput =
       target?.tagName === 'INPUT' ||

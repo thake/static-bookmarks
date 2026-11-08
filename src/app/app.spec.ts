@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { App } from './app';
 import { BookmarksMap } from './bookmark.model';
 import { ClickTrackingService, CLICKS_STORAGE_KEY } from './click-tracking.service';
+import { SettingsService, SETTINGS_STORAGE_KEY } from './settings.service';
 
 const MOCK_BOOKMARKS: BookmarksMap = {
   'Development & Docs': [
@@ -567,6 +568,133 @@ describe('App (Static Bookmarks)', () => {
       // Verify localStorage was updated
       const stored = JSON.parse(localStorage.getItem(CLICKS_STORAGE_KEY) || '{}');
       expect(stored['https://regex101.com']).toBe(1);
+    });
+  });
+
+  describe('User Settings integration', () => {
+    it('should open and close settings modal via settings button', async () => {
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(app.isSettingsOpen()).toBe(false);
+      expect(el.querySelector('[data-testid="settings-modal"]')).toBeNull();
+
+      const settingsBtn = el.querySelector<HTMLButtonElement>('[data-testid="settings-button"]')!;
+      expect(settingsBtn).toBeTruthy();
+      expect(settingsBtn.getAttribute('aria-label')).toBe('Einstellungen öffnen');
+
+      // Click settings button to open modal
+      settingsBtn.click();
+      fixture.detectChanges();
+
+      expect(app.isSettingsOpen()).toBe(true);
+      expect(el.querySelector('[data-testid="settings-modal"]')).toBeTruthy();
+
+      // Click close button inside modal
+      const closeBtn = el.querySelector<HTMLButtonElement>('[data-testid="close-settings-button"]')!;
+      closeBtn.click();
+      fixture.detectChanges();
+
+      expect(app.isSettingsOpen()).toBe(false);
+      expect(el.querySelector('[data-testid="settings-modal"]')).toBeNull();
+    });
+
+    it('should NOT display "Häufig von dir genutzt" when showTopUsedLinks setting is false, even if clicks exist', async () => {
+      localStorage.setItem(
+        CLICKS_STORAGE_KEY,
+        JSON.stringify({
+          'https://angular.dev': 5,
+        })
+      );
+      localStorage.setItem(
+        SETTINGS_STORAGE_KEY,
+        JSON.stringify({
+          showTopUsedLinks: false,
+        })
+      );
+
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const headings = Array.from(
+        el.querySelectorAll('[data-testid="category-heading"]')
+      ).map((h) => h.textContent?.trim());
+
+      expect(headings).not.toContain(App.TOP_CATEGORY_NAME);
+      expect(headings).toEqual(['Development & Docs', 'Tools & Utilities']);
+    });
+
+    it('should reactively show or hide "Häufig von dir genutzt" when showTopUsedLinks setting is toggled', async () => {
+      localStorage.setItem(
+        CLICKS_STORAGE_KEY,
+        JSON.stringify({
+          'https://angular.dev': 5,
+        })
+      );
+
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      let headings = Array.from(
+        el.querySelectorAll('[data-testid="category-heading"]')
+      ).map((h) => h.textContent?.trim());
+      expect(headings[0]).toBe(App.TOP_CATEGORY_NAME);
+
+      // Disable top links
+      app.settingsService.setShowTopUsedLinks(false);
+      fixture.detectChanges();
+
+      headings = Array.from(
+        el.querySelectorAll('[data-testid="category-heading"]')
+      ).map((h) => h.textContent?.trim());
+      expect(headings).not.toContain(App.TOP_CATEGORY_NAME);
+
+      // Re-enable top links
+      app.settingsService.setShowTopUsedLinks(true);
+      fixture.detectChanges();
+
+      headings = Array.from(
+        el.querySelectorAll('[data-testid="category-heading"]')
+      ).map((h) => h.textContent?.trim());
+      expect(headings[0]).toBe(App.TOP_CATEGORY_NAME);
+    });
+
+    it('should ignore global bookmark navigation keys when settings modal is open', async () => {
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      app.openSettings();
+      fixture.detectChanges();
+
+      expect(app.selectedIndex()).toBe(-1);
+
+      // Press ArrowDown while settings modal is open
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+      fixture.detectChanges();
+
+      expect(app.selectedIndex()).toBe(-1);
     });
   });
 });

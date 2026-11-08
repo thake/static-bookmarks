@@ -291,7 +291,7 @@ test.describe('Static Bookmarks Application', () => {
     await expect(firstTag).toHaveText('angular');
 
     await firstTag.click();
-    await expect(page).toHaveURL(/localhost:4200\/?$/);
+    await expect(page).toHaveURL(/localhost(:\d+)?\/?$/);
     await expect(page.getByTestId('filter-input')).toHaveValue('angular');
     await expect(items).toHaveCount(1);
   });
@@ -709,6 +709,76 @@ test.describe('Static Bookmarks Application', () => {
     await page.keyboard.press('ArrowDown');
     await expect(items.nth(1)).toHaveClass(/selected/);
     await expect(items.nth(0)).not.toHaveClass(/selected/);
+  });
+
+  test('opens settings modal via header button, toggles off top used links, and verifies category disappears and persists on reload', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'sb_bookmark_clicks',
+        JSON.stringify({
+          'https://angular.dev': 5,
+        })
+      );
+    });
+
+    await page.goto('/');
+
+    const categories = page.getByTestId('category-heading');
+    await expect(categories.first()).toHaveText('Häufig von dir genutzt');
+
+    const settingsBtn = page.getByTestId('settings-button');
+    await expect(settingsBtn).toBeVisible();
+    await expect(settingsBtn).toHaveAttribute('aria-label', 'Einstellungen öffnen');
+
+    // Open settings modal
+    await settingsBtn.click();
+    const modal = page.getByTestId('settings-modal');
+    await expect(modal).toBeVisible();
+    await expect(modal.locator('#settings-title')).toHaveText('Einstellungen');
+
+    const toggle = page.getByTestId('toggle-top-links');
+    await expect(toggle).toBeChecked();
+
+    // Toggle off
+    await toggle.click();
+    await expect(toggle).not.toBeChecked();
+
+    // Close modal via close button
+    await page.getByTestId('close-settings-button').click();
+    await expect(modal).not.toBeVisible();
+
+    // "Häufig von dir genutzt" should no longer be displayed
+    await expect(categories.first()).not.toHaveText('Häufig von dir genutzt');
+    await expect(categories.first()).toHaveText('Development & Docs');
+
+    // Verify localStorage persistence
+    const storedSettings = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('sb_user_settings') || '{}')
+    );
+    expect(storedSettings.showTopUsedLinks).toBe(false);
+
+    // Reload page to verify persistence across sessions
+    await page.reload();
+    await expect(categories.first()).not.toHaveText('Häufig von dir genutzt');
+    await expect(categories.first()).toHaveText('Development & Docs');
+
+    // Open settings and toggle back on
+    await page.getByTestId('settings-button').click();
+    await expect(page.getByTestId('settings-modal')).toBeVisible();
+    const toggleAfterReload = page.getByTestId('toggle-top-links');
+    await expect(toggleAfterReload).not.toBeChecked();
+
+    await toggleAfterReload.click();
+    await expect(toggleAfterReload).toBeChecked();
+
+    // Close via Escape key
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('settings-modal')).not.toBeVisible();
+
+    // Top category should be back
+    await expect(categories.first()).toHaveText('Häufig von dir genutzt');
   });
 });
 

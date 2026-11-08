@@ -1,0 +1,64 @@
+@if (isOpen()) {
+  <div
+    class="modal-backdrop"
+    data-testid="settings-backdrop"
+    (click)="onBackdropClick($event)"
+  >
+    <div
+      class="modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+      data-testid="settings-modal"
+    >
+      <header class="modal-header">
+        <h2 id="settings-title" class="modal-title">Einstellungen</h2>
+        <button
+          type="button"
+          class="close-btn"
+          data-testid="close-settings-button"
+          aria-label="Einstellungen schließen"
+          title="Schließen"
+          (click)="close()"
+        >
+          <svg
+            class="close-icon"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M5 5l10 10M15 5L5 15" />
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="settings-group">
+          <label class="setting-item" for="toggle-top-links">
+            <div class="setting-text">
+              <span class="setting-label">Häufig genutzte Lesezeichen anzeigen</span>
+              <span class="setting-description">
+                Zeigt die meistgeklickten Lesezeichen als eigene Kategorie am Anfang der Liste an.
+              </span>
+            </div>
+            <div class="switch-container">
+              <input
+                id="toggle-top-links"
+                type="checkbox"
+                role="switch"
+                class="switch-input"
+                data-testid="toggle-top-links"
+                [checked]="settingsService.showTopUsedLinks()"
+                (change)="onToggleTopLinks($event)"
+              />
+              <span class="switch-slider" aria-hidden="true"></span>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+}
