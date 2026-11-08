@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="UTF-8" />
+  <title>Kotlin Weekly</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Your weekly dose of Kotlin" />
+  <meta name="keywords" content="kotlin, newsletter" />
+
+  <meta property="og:image" content="" />
+  <meta property="og:title" content="Kotlin Weekly" />
+  <meta property="og:site_name" content="Kotlin Weekly" />
+  <meta property="og:url" content="https://www.kotlinweekly.net/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="Your weekly dose of Kotlin" />
+  <meta property="og:keywords" content="kotlin, newsletter" />
+
+  <meta name="twitter:text:description" content="Your weekly dose of Kotlin" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="" />
+  <meta name="twitter:creator" content="" />
+  <meta name="twitter:image" content="" />
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="/img/favicon.png" />
+
+  <!-- 3rd party CSS -->
+  <link
+    rel="stylesheet"
+    href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+    crossorigin="anonymous"
+  />
+  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+  <!-- Kotlin Weekly CSS -->
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="/css/styles.css"
+  />
+
+  <!-- aos.js to animate on scroll -->
+  <script defer src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+  <!-- Kotlin Weekly JS -->
+  <script defer src="/js/kw.js"></script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyDp3CTYNymWgqL1xSGOMMkjPDfqqIDmZXE",
+    authDomain: "kotlin-weekly.firebaseapp.com",
+    databaseURL: "https://kotlin-weekly.firebaseio.com",
+    projectId: "kotlin-weekly",
+    storageBucket: "kotlin-weekly.appspot.com",
+    messagingSenderId: "647286555897",
+    appId: "1:647286555897:web:22e545e79bb9e238114e28",
+    measurementId: "G-S0V02B50Z6"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+
+</head>
+
+  <body>
+    <nav id="navigation">
+  <div class="container">
+    <div class="navigation-content">
+      <div class="navigation-brand">
+        <a href="#"><img src="img/logo-navbar.svg" alt=""/></a>
+      </div>
+      <ul class="navigation-menu">
+          <li class="navigation-menu-item ">
+            <a href="#sponsor" title="Sponsor" alt="Sponsor">Sponsor</a>
+          </li>
+          
+        <li class="navigation-menu-item ">
+          <a href="#latest" title="Latest issues" alt="Latest issue">Latest</a>
+        </li>
+        <li class="navigation-menu-item">
+          <a href="#social" title="Contact" alt="Contact">Contact</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <header id="masthead">
+  <div class="masthead-content" data-aos="fade-down" data-aos-duration="1000">
+    <h1>Your weekly dose of Kotlin</h1>
+    <p>
+      Register for the newsletter to get your weekly Kotlin dose. It is free, we
+      are lovely and do not send spam
+    </p>
+   <!-- Begin Mailchimp Signup Form -->
+      <div id="mc_embed_shell">
+          <link href="//cdn-images.mailchimp.com/embedcode/classic-061523.css" rel="stylesheet" type="text/css">
+          <style type="text/css">
+              #mc_embed_signup{background:#fff; false;clear:left; font:14px Helvetica,Arial,sans-serif; width: 600px;}
+              /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
+                 We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
+          </style>
+          <div id="mc_embed_signup">
+              <form action="https://kotlinweekly.us12.list-manage.com/subscribe/post?u=f39692e245b94f7fb693b6d82&amp;id=93b2272cb6&amp;f_id=008dbae0f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank">
+                 <br/>
+                  <div id="mc_embed_signup_scroll"><h2>Subscribe</h2>
+                      <div class="indicates-required"><span class="asterisk">*</span> indicates required</div>
+                      <div class="mc-field-group"><label for="mce-EMAIL">Email Address <span class="asterisk">*</span></label><input type="email" name="EMAIL" class="required email" id="mce-EMAIL" required="" value=""></div><div class="mc-field-group"><label for="mce-FNAME">First Name </label><input type="text" name="FNAME" class=" text" id="mce-FNAME" value=""></div><div class="mc-field-group"><label for="mce-LNAME">Last Name </label><input type="text" name="LNAME" class=" text" id="mce-LNAME" value=""></div>
+                      <div id="mce-responses" class="clear">
+                          <div class="response" id="mce-error-response" style="display: none;"></div>
+                          <div class="response" id="mce-success-response" style="display: none;"></div>
+                      </div><div aria-hidden="true" style="position: absolute; left: -5000px;"><input type="text" name="b_f39692e245b94f7fb693b6d82_93b2272cb6" tabindex="-1" value=""></div><div class="clear"><input type="submit" name="subscribe" id="mc-embedded-subscribe" class="button" value="Subscribe"></div>
+                  </div>
+              </form>
+          </div>
+          <script type="text/javascript" src="//s3.amazonaws.com/downloads.mailchimp.com/js/mc-validate.js"></script><script type="text/javascript">(function($) {window.fnames = new Array(); window.ftypes = new Array();fnames[0]='EMAIL';ftypes[0]='email';fnames[1]='FNAME';ftypes[1]='text';fnames[2]='LNAME';ftypes[2]='text';}(jQuery));var $mcj = jQuery.noConflict(true);</script></div>
+
+  </div>
+</header>
+
+    <main id="content">
+  <section id="latest" class="latest">
+    <div class="latest-content">
+        <div class="latest-issue" data-aos="fade-up" data-aos-delay="100">
+            <h2>Latest Issue</h2>
+            <ul class="action-bar">
+                <li aria-hidden="true"></li>
+                <li aria-hidden="true"></li>
+                <li aria-hidden="true"></li>
+            </ul>
+            <div class="card">
+                <p>
+                <h1>Kotlin Weekly #-536!</h1>
+                </p>
+                <p><a href="https://kotlinfoundation.org/news/grants-program-winners-26/">Winners of the Kotlin Foundation Grants Program 2026</a> (kotlinfoundation.org)
+The Kotlin Foundation announces the five projects selected for its 2026 Grants Program: Dependency Analysis Gradle Plugin, Llamatik, FileKit, Kamera and JUnit. Each of them receives a $6,000 grant to fund the work in its proposal.</p>
+
+<p><a href="https://developer.android.com/blog/posts/building-apps-developer-sessions">Developing for Today: 50+ New Developer Sessions on Building Apps Today</a> (developer.android.com)
+Florina Muntenescu shares the more than 50 sessions released from Android Dev Summit 2026, each with a downloadable transcript enhanced with the content of the slides.</p>
+
+<p><a href="https://developer.android.com/blog/posts/build-for-every-screen-jetpack-compose-updates">Build for every screen with the latest Jetpack Compose updates from Android Developer Summit</a> (developer.android.com)
+Rebecca Gutteridge rounds up the Compose announcements from Android Dev Summit, including the new Jetpack AppState.</p>
+
+<p><a href="https://blog.jetbrains.com/kotlin/2026/11/kotlin-multiplatform-contest-2027/">The Kotlin Multiplatform Contest Is Open: Win a Trip to KotlinConf</a> (blog.jetbrains.com)
+The Kotlin Multiplatform Contest is back for students and recent graduates. The authors of the top three projects win a trip to KotlinConf 2027 in Kraków, and submissions are open until December 7.</p>
+
+<p><a href="https://coroutinesmastery.com">[SPONSORED] Coroutines Mastery has started — this is your last chance to join before next year</a> (coroutinesmastery.com)
+The Coroutines Mastery cohort is already underway, but late enrollment is still open. Miss this edition and the next course will be in a year. Worried about catching up? You keep access for 6 months, so you can complete and revisit the material at your own pace.</p>
+
+<p><a href="https://cheat-sheet.kt.academy/coroutines">[SPONSORED] Learn Kotlin Coroutines with a free cheat sheet covering the concepts every developer should know</a> (cheat-sheet.kt.academy)
+Understand how Kotlin Coroutines work without constantly searching through documentation. Download a free cheat sheet with builders, dispatchers, scopes, jobs, structured concurrency, cancellation, and practical patterns for concurrent programming.</p>
+
+<p><a href="https://blog.insert-koin.io/koin-skills-koin-the-right-way-with-your-agent-4fe1b49d511c?gi=f980cf084323">Koin Skills: Koin, the Right Way, with Your Agent</a> (blog.insert-koin.io)
+Arnaud Giuliani introduces the official Koin skills for AI agents, released as a Claude Code plugin to help with setup, migrations from other DI frameworks and diagnosing errors.</p>
+
+<p><a href="https://aws.amazon.com/blogs/developer/announcing-general-availability-of-dynamodb-mapper-for-kotlin/">Announcing General Availability of DynamoDB Mapper for Kotlin</a> (aws.amazon.com)
+Ian Botsford announces that DynamoDB Mapper for Kotlin is generally available, and walks through its API along with the features added since the Developer Preview.</p>
+
+<p><a href="https://doveletter.dev/articles/compose-mechanisms-part3-performance">Jetpack Compose Mechanisms, Part 3: Recomposition Performance and Why Stability Still Matters</a> (doveletter.dev)
+Jaewoong Eum closes his series on Jetpack Compose Mechanisms by looking at where Compose spends its time during recomposition, and why stability still matters now that strong skipping is the default.</p>
+
+<p><a href="https://medium.com/@ravirawal13/from-kotlin-source-to-dex-android-compilation-pipeline-6d575c13e695">From Kotlin Source to DEX: Tracing the Android Compilation Pipeline</a> (medium.com)
+Ravi Rawal traces the path of your Kotlin code from the source file to the DEX instructions that run on the device</p>
+
+<p><a href="https://kodein-koders.com/en/blog/inara-inject-your-dependencies-at-compile-time/">Inara: Inject your dependencies at compile time</a> (kodein-koders.com)
+Salomon Brys, who created Kodein back in 2015, introduces Inara, a library to inject your dependencies at compile time in Kotlin Multiplatform.</p>
+
+<p><a href="https://terrablog.pages.dev/blog/multithreading-compose-multiplatform-web-apps/">Multithreading in Compose Multiplatform Web Apps</a> (terrablog.pages.dev)
+Konstantin Tskhovrebov looks at multithreading in Compose Multiplatform apps with a web target, and what changes there compared to the other platforms.</p>
+
+<p><a href="https://www.youtube.com/watch?v=8Lmv7LGgL4E">Android Dev Summit 2026 keynote</a> (www.youtube.com)
+Watch the Android Dev Summit 2026 keynote to catch up with everything announced at the event.</p>
+
+<p><a href="https://www.youtube.com/watch?v=_Nt0maXX3zk">Bridging Threads and Coroutines: Behavior-Compatible Interop at Million-Line Scale - Droidcon Lisbon</a> (www.youtube.com)
+In this talk from Droidcon Lisbon, Adrian Blanco explains how the OK app moved a million-line Android codebase from Java threads to Kotlin coroutines without changing existing behavior. You will also leave with a better mental model of how coroutines executes on threads.</p>
+
+<p><a href="https://www.runway.team/webinar/the-new-mobile-bottleneck-shipping-ai-written-code?utm_source=kotlinweekly&amp;utm_medium=email&amp;utm_campaign=bottleneck-webinar&amp;utm_content=2026-11-08">[SPONSORED] Can your mobile release handle AI-generated code?</a> (www.runway.team)
+AI multiplied the code your team writes. But the process that delivers it to users hasn’t changed: same release trains, same quality gates, same manual handoffs. Join a live panel with mobile engineering leaders on what that volume changes about the release process. Nov 12, 10am PT/1pm ET.</p>
+
+<p><a href="https://chrisbanes.me/posts/haze-2.1.0/">Haze 2.1: Shatterproof Glass</a> (chrisbanes.me)
+Chris Banes releases Haze 2.1, where Glass is now stable and surfaces can merge and separate with the new hazeGlassContainer modifier.</p>
+
+<p><a href="https://github.com/rock3r/maradona">Maradona</a> (github.com)
+Sebastiano Poggi’s Maradona renders Mermaid diagrams as native Compose Multiplatform composables on desktop, Android and iOS, without a WebView or a JavaScript runtime.</p>
+
+<p><a href="https://github.com/jakepurple13/ScrcpyViewerV2">Scrcpy Vwr</a> (github.com)
+A desktop app built with Compose Multiplatform to mirror and control Android devices. It ships its own scrcpy client, so there is no need to install scrcpy or adb.</p>
+
+<p><a href="https://github.com/mohammadmansour200/ligand">Ligand</a> (github.com)
+Ligand lets you sketch organic chemistry structures and see them in 3D.</p>
+
+<p><strong>Contribute</strong></p>
+
+<p>We rely on sponsors to offer quality content every Sunday. If you would like to submit a sponsored link <a href="mailto:mailinglist@kotlinweekly.net?subject=Sponsoring%20for%20Kotlin%20Weekly">contact us!</a>.</p>
+
+<p>If you want to submit an article for the next issue, <a href="mailto:mailinglist@kotlinweekly.net?subject=Link for submission - Kotlin Weekly">please do also drop us an email.</a></p>
+
+<p>Thanks to JetBrains for their support!</p>
+
+            </div>
+        </div>
+        <div class="submit-content">
+            <div class="submit" data-aos="fade-up" data-aos-delay="300">
+                <h2>Submit</h2>
+                <div class="card">
+                    <p>Suggest a link for an upcoming Kotlin Weekly</p>
+                    <form class="contact">
+                        <input type="text" name="body" id="link_send" placeholder="Link url, conference…"/>
+                        <button id="link_send_button" type="button">Send</button>
+                    </form>
+                    <div id="notification_link" class='success-notification' style="padding: 20px;">
+                    </div>
+                </div>
+                <!-- Firebase CDN -->
+                <script src="https://www.gstatic.com/firebasejs/8.1.2/firebase-app.js"></script>
+                <script src="https://www.gstatic.com/firebasejs/8.1.2/firebase-firestore.js"></script>
+                <script>
+
+                    // Initialize Cloud Firestore through Firebase
+                    firebase.initializeApp({
+                      apiKey: 'AIzaSyDp3CTYNymWgqL1xSGOMMkjPDfqqIDmZXE',
+                      authDomain: 'kotlin-weekly.firebaseapp.com',
+                      projectId: 'kotlin-weekly'
+                    });
+
+                    // Initialize Cloud Firestore through Firebase
+                    const db = firebase.firestore();
+
+                    const docRef = db.collection("Kotlin");
+
+                    const inputField = document.querySelector("#link_send");
+                    const submitButton = document.querySelector("#link_send_button");
+                    const notification = document.querySelector("#notification_link");
+
+                    submitButton.addEventListener("click", function () {
+                        const inputData = inputField.value;
+                        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                        // Check if input is empty
+                        if (inputData === "") {
+                            notification.innerHTML = "Input cannot be empty!";
+                            notification.style.backgroundColor = "lightcoral";
+                            return; // Stop execution
+                        }
+
+                        if (emailPattern.test(inputData)) {
+                            notification.innerHTML = "Emails are not allowed!";
+                            notification.style.backgroundColor = "lightcoral";
+                            return; // Stop execution if input is an email
+                        }
+
+                        docRef.add({
+                            message: inputData,
+                            time: Date()
+                        }).then(function (docRef) {
+                            console.log("Document written with ID");
+                            inputField.value = "";
+                            notification.innerHTML = "Thank you for your link submission!";
+                            notification.style.backgroundColor = "darkseagreen";
+                        }).catch(function (error) {
+                            console.error("Error adding document: ", error);
+                        });
+                    });
+
+                </script>
+                <div
+                        class="past-issues"
+                        data-aos="fade-up"
+                        data-aos-delay="500"
+                        data-aos-offset="-100"
+                >
+                    <header>
+                        <h2>Past Issues</h2>
+                        <span><i class="fas fa-rss"></i>RSS</span>
+                    </header>
+                    <div class="card">
+                        <ul>
+                            
+                            <li>
+                                <span> <a href="https://mailchi.mp/kotlinweekly/kotlin-weekly-536">Kotlin Weekly #-536!</a> </span>
+                                <span>08/11/2026</span>
+                            </li>
+                            
+                            <li>
+                                <span> <a href="https://mailchi.mp/kotlinweekly/kotlin-weekly-535">Kotlin Weekly #-535!</a> </span>
+                                <span>01/11/2026</span>
+                            </li>
+                            
+                            <li>
+                                <span> <a href="https://mailchi.mp/kotlinweekly/kotlin-weekly-534">Kotlin Weekly #-534!</a> </span>
+                                <span>25/10/2026</span>
+                            </li>
+                            
+                            <li>
+                                <span> <a href="https://mailchi.mp/kotlinweekly/kotlin-weekly-533">Kotlin Weekly #-533!</a> </span>
+                                <span>18/10/2026</span>
+                            </li>
+                            
+                            <li>
+                                <span> <a href="https://mailchi.mp/kotlinweekly/kotlin-weekly-532">Kotlin Weekly #-532!</a> </span>
+                                <span>11/10/2026</span>
+                            </li>
+                            
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+</section>
+
+  <section class="think">
+  <div class="container">
+    <h2 data-aos="fade" data-aos-delay="50">What people think about us</h2>
+    <div class="think-container">
+      <div class="think-item" data-aos="fade-up" data-aos-delay="100">
+        <img src="img/user-01.jpg" alt="" />
+        <p>
+          “Kotlin Weekly has established itself as one of the main references of what's going on in the Kotlin world.”
+        </p>
+        <span>Hadi Hariri</span> <span>Head of Developer Advocacy, JetBrains</span>
+      </div>
+      <div class="think-item" data-aos="fade-up" data-aos-delay="300">
+        <img src="img/user-02.jpg" alt="" />
+        <p> “If you have time for only a single source of information about Kotlin, Kotlin Weekly is a great choice. It is reliable, informative and fair”
+        </p>
+       <span>Marcin Moskala</span> <span>Founder of Kt.Academy</span>
+      </div>
+      <div class="think-item" data-aos="fade-up" data-aos-delay="500">
+        <img src="img/user-03.jpg" alt="" />
+        <p>
+			 “Kotlin Weekly is a comprehensive newsletter that helps me stay up to date with the most notable and recent developments in Kotlin libraries and new community initiatives.” 
+        </p>
+		 <span>Raul Raja</span> <span>CTO 47degrees</span>
+       
+      </div>
+    </div>
+  </div>
+</section>
+
+  <section id="social" class="social">
+    <div class="social-content">
+        <div class="contact-form" data-aos="fade-up" data-aos-delay="100">
+            <h2>Contact with us</h2>
+            <div id="notification" class='success-notification' style="padding: 20px;">
+            </div>
+            <form class="contact">
+                <input type="email" id="contact_address" placeholder="Your email address" name="email">
+                <textarea name="body" id="contact_send" placeholder="Comment…" rows="8"></textarea>
+                <button type="button" id="submit_btn">Send</button>
+            </form>
+        </div>
+        <div class="bluesky-feed" data-aos="fade-up" data-aos-delay="300">
+            <script type="module" src="https://cdn.jsdelivr.net/npm/bsky-embed/dist/bsky-embed.es.js" async></script>
+            <bsky-embed 
+                username="kotlinweekly.bsky.social" 
+                max-width="500" 
+                limit="5"
+                custom-styles=".container { background: transparent; border: none; }">
+            </bsky-embed>
+        </div>
+        <script>
+
+
+            const docRefContact = db.collection("KotlinContact");
+
+            const inputFieldSocial = document.querySelector("#contact_send");
+            const inputFieldAddress = document.querySelector("#contact_address");
+            const submitButtonSocial = document.querySelector("#submit_btn");
+
+            submitButtonSocial.addEventListener("click", function () {
+                const inputData = inputFieldSocial.value.trim();
+                const inputAddress = inputFieldAddress.value.trim();
+
+                const notification = document.getElementById("notification");
+
+                // Validation: ask for more detail on empty or single-word entries
+                if (!inputData || inputData.split(/\s+/).length < 2) {
+                    notification.innerHTML = "Please write a bit more about your request";
+                    notification.style.backgroundColor = "lightcoral";
+                    return;
+                }
+
+                if (!inputAddress) {
+                    notification.innerHTML = "Please enter your email address";
+                    notification.style.backgroundColor = "lightcoral";
+                    return;
+                }
+
+                inputFieldSocial.value = "";
+                inputFieldAddress.value = "";
+                notification.innerHTML = "Thank you for your message! We will get back to you soon";
+                notification.style.backgroundColor = "darkseagreen";
+
+                docRefContact.add({
+                    message: inputData,
+                    address: inputAddress,
+                    time: Date()
+                }).then(function () {
+                    console.log("Document written with ID");
+                }).catch(function (error) {
+                    console.error("Error adding document: ", error);
+                });
+            });
+                } else {
+                    console.log("Invalid input detected. Message not stored in Firestore.");
+                }
+            });
+
+        </script>
+    </div>
+</section>
+
+  <section id="sponsor" class="sponsor">
+  <div class="container">
+    <h2 data-aos="fade" data-aos-delay="50">Sponsor us</h2>
+    <div class="think-container">
+      <div class="think-item" data-aos="fade-up" data-aos-delay="100">
+
+        <p>
+		 Kotlin Weekly is a weekly newsletter distributed currently to <b>22.907 developers</b> worldwide.</br></br>
+
+		 We offer sponsorships to be included in our mailing list. There is only one sponsored ad per issue, so you don't have to compete with others for attention. We are very transparent on how the Kotlin Weekly operates.</br></br>
+		 We also offer, at the end of the newsletter, the option to include a job ad.</br></br>
+
+		 If you are interested, <a href="#social">drop us a message</a> and let us know what you want. 
+        </p>
+    
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+    <footer id="footer">
+  <div class="footer-content">
+    <p>Copyright © 2023 Kotlin Weekly - Your weekly dose of Kotlin</p>
+	<p>Kotlin Weekly is not affiliated with the Kotlin Foundation.</p>
+    <p><a href="https://kotlin-weekly.web.app/imprint.html">Imprint</a></p>
+    <p><a href="https://kotlin-weekly.web.app/privacy.html">Privacy Policy</a></p>
+    <ul>
+      <li>
+        <a href="https://twitter.com/kotlinweekly"><i class="fab fa-twitter"></i></a>
+      </li>
+      <li>
+        <a href="https://www.facebook.com/kotlinweekly"><i class="fab fa-facebook"></i></a>
+      </li>
+     
+    </ul>
+  </div>
+</footer>
+
+  </body>
+</html>

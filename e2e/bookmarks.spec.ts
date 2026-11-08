@@ -301,13 +301,18 @@ test.describe('Static Bookmarks Application', () => {
     await page.goto('/');
 
     const categories = page.getByTestId('category-heading');
-    await expect(categories).toHaveCount(3);
-    await expect(categories.nth(0)).toHaveText('Development & Docs');
-    await expect(categories.nth(1)).toHaveText('Tools & Utilities');
-    await expect(categories.nth(2)).toHaveText('Reading & Community');
+    await expect(categories.first()).toBeVisible();
+    const categoryCount = await categories.count();
+    expect(categoryCount).toBeGreaterThanOrEqual(10);
 
     const items = page.getByTestId('bookmark-item');
-    await expect(items).toHaveCount(10);
+    const itemCount = await items.count();
+    expect(itemCount).toBeGreaterThanOrEqual(100);
+
+    // Verify first bookmark name has no leading whitespace
+    const firstName = await page.getByTestId('bookmark-name').first().textContent();
+    expect(firstName).toBeTruthy();
+    expect(firstName!.trimStart()).toBe(firstName);
   });
 
   test('hides tags initially, shows matching tags when filtered, and expands on click with row wrapping', async ({

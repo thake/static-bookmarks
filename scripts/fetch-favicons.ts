@@ -46,30 +46,40 @@ export function hashBuffer(buffer: Buffer): string {
   return crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 12);
 }
 
-export function extractIconHrefFromHtml(html: string): string | null {
+export function extractIconHrefsFromHtml(html: string): string[] {
   const linkRegex = /<link\b[^>]*>/gi;
-  const relRegex = /\brel=["'][^"']*\b(?:icon|apple-touch-icon)\b[^"']*["']/i;
+  const relRegex = /\brel=(?:["'][^"']*\b(?:icon|apple-touch-icon)\b[^"']*["']|(?:icon|apple-touch-icon)\b)/i;
   const hrefRegex = /\bhref=(?:["']([^"']+)["']|([^\s>]+))/i;
 
+  const candidates: string[] = [];
   let match: RegExpExecArray | null;
   while ((match = linkRegex.exec(html)) !== null) {
     const linkTag = match[0];
     if (relRegex.test(linkTag)) {
       const hrefMatch = hrefRegex.exec(linkTag);
       const href = hrefMatch ? (hrefMatch[1] || hrefMatch[2])?.trim() : null;
-      if (href) {
-        return href;
+      if (href && !candidates.includes(href)) {
+        candidates.push(href);
       }
     }
   }
-  return null;
+  return candidates;
 }
 
-export async function fetchWithTimeout(url: string, timeoutMs = 3000): Promise<Response> {
+export function extractIconHrefFromHtml(html: string): string | null {
+  const candidates = extractIconHrefsFromHtml(html);
+  return candidates.length > 0 ? candidates[0] : null;
+}
+
+export async function fetchWithTimeout(url: string, timeoutMs = 4000): Promise<Response> {
   return fetch(url, {
     signal: AbortSignal.timeout(timeoutMs),
     headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; StaticBookmarks/1.0)',
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+      'Accept':
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
     },
   });
 }
@@ -77,41 +87,104 @@ export async function fetchWithTimeout(url: string, timeoutMs = 3000): Promise<R
 export async function downloadIconForUrl(pageUrl: string): Promise<DownloadedIcon | null> {
   const parsed = new URL(pageUrl);
 
-  // 1. Try finding favicon from page HTML
-  try {
-    const pageRes = await fetchWithTimeout(pageUrl, 3000);
-    if (pageRes.ok) {
-      const html = await pageRes.text();
-      const href = extractIconHrefFromHtml(html);
-      if (href) {
-        const fullIconUrl = new URL(href, pageUrl).href;
-        const iconRes = await fetchWithTimeout(fullIconUrl, 3000);
-        if (iconRes.ok) {
-          const buffer = Buffer.from(await iconRes.arrayBuffer());
-          if (buffer.length > 0) {
-            const ext = detectExtension(iconRes.headers.get('content-type'), buffer);
-            return { buffer, ext };
+  async function tryHtmlPage(url: string): Promise<DownloadedIcon | null> {
+    try {
+      const pageRes = await fetchWithTimeout(url, 4000);
+      if (pageRes.ok) {
+        const html = await pageRes.text();
+        const hrefs = extractIconHrefsFromHtml(html);
+        for (const href of hrefs) {
+          try {
+            const fullIconUrl = new URL(href, url).href;
+            const iconRes = await fetchWithTimeout(fullIconUrl, 4000);
+            if (iconRes.ok) {
+              const buffer = Buffer.from(await iconRes.arrayBuffer());
+              if (buffer.length > 50) {
+                const ext = detectExtension(iconRes.headers.get('content-type'), buffer);
+                return { buffer, ext };
+              }
+            }
+          } catch {
+            // Continue to next candidate
           }
         }
       }
+    } catch {
+      // Failed fetching HTML
     }
-  } catch {
-    // HTML parse or icon fetch failed, continue to fallback
+    return null;
   }
 
-  // 2. Fallback to ${origin}/favicon.ico
+  // 1. Try finding favicon from the bookmark page itself
+  const pageResult = await tryHtmlPage(pageUrl);
+  if (pageResult) {
+    return pageResult;
+  }
+
+  // 2. If this was a subpage, try the origin home page (e.g. https://domain.com/)
+  // This ensures icons are found even when the root domain is NOT in the bookmarks!
+  if (parsed.pathname !== '/' && parsed.pathname !== '') {
+    const originHomeUrl = `${parsed.origin}/`;
+    const originResult = await tryHtmlPage(originHomeUrl);
+    if (originResult) {
+      return originResult;
+    }
+  }
+
+  // 3. Fallback to ${origin}/favicon.ico
   try {
     const fallbackUrl = `${parsed.origin}/favicon.ico`;
-    const iconRes = await fetchWithTimeout(fallbackUrl, 3000);
+    const iconRes = await fetchWithTimeout(fallbackUrl, 4000);
     if (iconRes.ok) {
       const buffer = Buffer.from(await iconRes.arrayBuffer());
-      if (buffer.length > 0) {
+      if (buffer.length > 50) {
         const ext = detectExtension(iconRes.headers.get('content-type'), buffer);
         return { buffer, ext };
       }
     }
   } catch {
     // Fallback failed
+  }
+
+  // 4. Fallback to root domain if it's a subdomain (e.g. dev.mysql.com -> mysql.com)
+  const parts = parsed.hostname.split('.');
+  if (parts.length > 2) {
+    const rootDomain = parts.slice(-2).join('.');
+    const rootHomeUrl = `${parsed.protocol}//${rootDomain}/`;
+    const rootResult = await tryHtmlPage(rootHomeUrl);
+    if (rootResult) {
+      return rootResult;
+    }
+
+    try {
+      const rootFaviconUrl = `${parsed.protocol}//${rootDomain}/favicon.ico`;
+      const rootRes = await fetchWithTimeout(rootFaviconUrl, 4000);
+      if (rootRes.ok) {
+        const buffer = Buffer.from(await rootRes.arrayBuffer());
+        if (buffer.length > 50) {
+          const ext = detectExtension(rootRes.headers.get('content-type'), buffer);
+          return { buffer, ext };
+        }
+      }
+    } catch {
+      // Root domain fallback failed
+    }
+  }
+
+  // 5. Fallback to public icon service (for Cloudflare-protected sites like npm, dribbble)
+  try {
+    const ddgUrl = `https://icons.duckduckgo.com/ip3/${parsed.hostname}.ico`;
+    const ddgRes = await fetchWithTimeout(ddgUrl, 4000);
+    if (ddgRes.ok) {
+      const buffer = Buffer.from(await ddgRes.arrayBuffer());
+      // DuckDuckGo returns a 1478 byte generic placeholder if not found
+      if (buffer.length > 50 && buffer.length !== 1478) {
+        const ext = detectExtension(ddgRes.headers.get('content-type'), buffer);
+        return { buffer, ext };
+      }
+    }
+  } catch {
+    // Icon service fallback failed
   }
 
   return null;
@@ -176,15 +249,20 @@ export async function run(options: RunOptions = {}): Promise<RunResult> {
   const diskFiles = new Set(await fs.readdir(faviconsDir));
   const writtenHashes = new Set<string>();
 
-  await Promise.all(
-    urls.map(async (url) => {
+  const CONCURRENCY = 10;
+  const queue = [...urls];
+  const workers = Array.from({ length: Math.min(CONCURRENCY, urls.length) }, async () => {
+    while (queue.length > 0) {
+      const url = queue.shift();
+      if (!url) break;
+
       // Check if already in manifest and file physically exists
       const existingPath = existingManifest[url];
       if (existingPath) {
         const existingFilename = path.basename(existingPath);
         if (diskFiles.has(existingFilename)) {
           manifest[url] = existingPath;
-          return;
+          continue;
         }
       }
 
@@ -208,8 +286,10 @@ export async function run(options: RunOptions = {}): Promise<RunResult> {
       } else {
         console.log(`[favicons] ✕ Kein Favicon gefunden für: ${url}`);
       }
-    })
-  );
+    }
+  });
+
+  await Promise.all(workers);
 
   // Sort manifest keys for clean git diffs
   const sortedManifest: Record<string, string> = {};

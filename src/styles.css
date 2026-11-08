@@ -14,6 +14,10 @@
   --tag-active-text: light-dark(#1d4ed8, #93c5fd);
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 *,
 *::before,
 *::after {

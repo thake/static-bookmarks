@@ -8,6 +8,7 @@ import {
   hashBuffer,
   detectExtension,
   extractIconHrefFromHtml,
+  extractIconHrefsFromHtml,
 } from './fetch-favicons.ts';
 
 describe('Favicons Cleanup & Pruning', () => {
@@ -102,6 +103,27 @@ describe('Favicons Cleanup & Pruning', () => {
     assert.equal(
       extractIconHrefFromHtml('<link rel="icon" href=/assets/fav.ico>'),
       '/assets/fav.ico'
+    );
+
+    // Unquoted rel (modern HTML5 / Docusaurus)
+    assert.equal(
+      extractIconHrefFromHtml('<link data-rh=true rel=icon href=/img/playwright-logo.ico />'),
+      '/img/playwright-logo.ico'
+    );
+
+    assert.equal(
+      extractIconHrefFromHtml('<link href=imgs/icon.png rel=icon>'),
+      'imgs/icon.png'
+    );
+
+    // Extract multiple candidates
+    const multipleHtml = `
+      <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+      <link rel="shortcut icon" href="/favicon.ico" />
+    `;
+    assert.deepEqual(
+      extractIconHrefsFromHtml(multipleHtml),
+      ['/favicon-48x48.png', '/favicon.ico']
     );
 
     // Ignore non-icon link tags
