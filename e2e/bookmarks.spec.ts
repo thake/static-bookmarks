@@ -567,5 +567,75 @@ test.describe('Static Bookmarks Application', () => {
     await expect(filterInput).toBeFocused();
     await expect(clearBtn).not.toBeVisible();
   });
+
+  test('supports keyboard navigation via ArrowDown, ArrowUp, Home, End, and Escape', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const items = page.getByTestId('bookmark-item');
+    await expect(items).toHaveCount(4);
+
+    const filterInput = page.getByTestId('filter-input');
+    await expect(filterInput).toBeFocused();
+
+    // ArrowDown selects first item
+    await page.keyboard.press('ArrowDown');
+    await expect(items.nth(0)).toHaveClass(/selected/);
+    await expect(items.nth(1)).not.toHaveClass(/selected/);
+
+    // ArrowDown selects second item
+    await page.keyboard.press('ArrowDown');
+    await expect(items.nth(1)).toHaveClass(/selected/);
+    await expect(items.nth(0)).not.toHaveClass(/selected/);
+
+    // ArrowUp returns to first item
+    await page.keyboard.press('ArrowUp');
+    await expect(items.nth(0)).toHaveClass(/selected/);
+
+    // ArrowUp from first item un-selects (returns to input only)
+    await page.keyboard.press('ArrowUp');
+    await expect(items.nth(0)).not.toHaveClass(/selected/);
+
+    // While input is still focused, Home and End work once navigated or with empty query
+    await expect(filterInput).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(items.nth(0)).toHaveClass(/selected/);
+
+    // End (Ende) jumps to the last item directly from input
+    await page.keyboard.press('End');
+    await expect(items.nth(3)).toHaveClass(/selected/);
+    await expect(items.nth(0)).not.toHaveClass(/selected/);
+
+    // Home (Pos 1) jumps to the first item directly from input
+    await page.keyboard.press('Home');
+    await expect(items.nth(0)).toHaveClass(/selected/);
+    await expect(items.nth(3)).not.toHaveClass(/selected/);
+
+    // Escape clears selection
+    await page.keyboard.press('Escape');
+    await expect(items.nth(0)).not.toHaveClass(/selected/);
+
+    // End on empty query also jumps directly to last item
+    await page.keyboard.press('End');
+    await expect(items.nth(3)).toHaveClass(/selected/);
+  });
+
+  test('quick-opens first matching bookmark on Enter directly from filter input in current window', async ({
+    page,
+  }) => {
+    await page.route('https://regex101.com/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: '<h1>Regex101</h1>' })
+    );
+
+    await page.goto('/');
+    const filterInput = page.getByTestId('filter-input');
+    await filterInput.fill('regex');
+
+    // Press Enter to quick-open the first/only match
+    await page.keyboard.press('Enter');
+    await page.waitForURL('https://regex101.com/**');
+    expect(page.url()).toContain('regex101.com');
+  });
 });
 

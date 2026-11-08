@@ -6,6 +6,7 @@
   padding: 0.375rem 0.75rem;
   min-inline-size: 0;
   transition: background-color 100ms ease;
+  scroll-margin-block-start: 5.5rem;
 }
 
 :host + :host {
@@ -13,8 +14,13 @@
 }
 
 :host:hover,
-:host:focus-within {
+:host:focus-within,
+:host.selected {
   background-color: var(--surface-hover);
+}
+
+:host.selected {
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .bookmark-link {
@@ -61,8 +67,15 @@
 }
 
 :host:hover .bookmark-name,
+:host.selected .bookmark-name,
 .bookmark-link:focus-visible .bookmark-name {
   color: var(--accent);
+}
+
+.bookmark-link:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
 }
 
 .bookmark-host {

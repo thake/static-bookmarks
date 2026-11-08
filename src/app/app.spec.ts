@@ -300,4 +300,84 @@ describe('App (Static Bookmarks)', () => {
     expect(el.querySelector('[data-testid="empty-state"]')).toBeNull();
     expect(el.querySelectorAll('[data-testid="bookmark-item"]').length).toBe(4);
   });
+
+  it('should navigate through bookmarks via ArrowDown / ArrowUp and clamp at bounds', async () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    fixture.detectChanges();
+
+    flushBookmarks();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+
+    // Initially nothing selected
+    expect(app.selectedIndex()).toBe(-1);
+    expect(el.querySelector('.bookmark-item.selected')).toBeNull();
+
+    // Navigate down to first item
+    app.onNavigateDown();
+    fixture.detectChanges();
+    expect(app.selectedIndex()).toBe(0);
+    expect(app.selectedUrl()).toBe('https://angular.dev');
+    expect(el.querySelectorAll('.bookmark-item')[0].classList.contains('selected')).toBe(true);
+
+    // Navigate down to second item
+    app.onNavigateDown();
+    fixture.detectChanges();
+    expect(app.selectedIndex()).toBe(1);
+    expect(app.selectedUrl()).toBe('https://developer.mozilla.org');
+
+    // Navigate up back to first item
+    app.onNavigateUp();
+    fixture.detectChanges();
+    expect(app.selectedIndex()).toBe(0);
+
+    // Navigate up from 0 un-selects (moves to -1)
+    app.onNavigateUp();
+    fixture.detectChanges();
+    expect(app.selectedIndex()).toBe(-1);
+    expect(app.selectedUrl()).toBeNull();
+
+    // Global Home and End keys
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'End' }));
+    fixture.detectChanges();
+    expect(app.selectedIndex()).toBe(3);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home' }));
+    fixture.detectChanges();
+    expect(app.selectedIndex()).toBe(0);
+
+    // Global Escape resets selection
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(app.selectedIndex()).toBe(-1);
+  });
+
+  it('should open first match on Enter when no item is highlighted, or open highlighted item', async () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    fixture.detectChanges();
+
+    flushBookmarks();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const openSpy = vi.spyOn(app, 'openBookmark').mockImplementation(() => {});
+
+    // When selectedIndex is -1, Enter opens the first match in current tab
+    app.onSelectCurrent();
+    expect(openSpy).toHaveBeenCalledWith('https://angular.dev', undefined);
+
+    // When an item is explicitly selected, Enter opens that item
+    app.selectedIndex.set(2);
+    app.onSelectCurrent({ newTab: true });
+    expect(openSpy).not.toHaveBeenCalledWith('https://regex101.com', undefined);
+    expect(openSpy).toHaveBeenCalledWith('https://regex101.com', true);
+
+    // Filter change resets selectedIndex
+    app.onQueryChange('angular');
+    expect(app.selectedIndex()).toBe(-1);
+  });
 });

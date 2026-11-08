@@ -15,6 +15,7 @@
     autofocus
     [value]="query()"
     (input)="updateFilter($event)"
+    (keydown)="onInputKeydown($event)"
   />
   @if (query()) {
     <button

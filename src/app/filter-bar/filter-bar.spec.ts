@@ -79,4 +79,81 @@ describe('FilterBar', () => {
 
     expect(component.query()).toBe('');
   });
+
+  it('should emit navigateDown, navigateUp, and selectCurrent on arrow and enter keys', () => {
+    const el = fixture.nativeElement as HTMLElement;
+    const input = el.querySelector<HTMLInputElement>('[data-testid="filter-input"]')!;
+
+    const downSpy = vi.fn();
+    const upSpy = vi.fn();
+    const selectSpy = vi.fn();
+
+    component.navigateDown.subscribe(downSpy);
+    component.navigateUp.subscribe(upSpy);
+    component.selectCurrent.subscribe(selectSpy);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true }));
+    expect(downSpy).toHaveBeenCalledTimes(1);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', cancelable: true }));
+    expect(upSpy).toHaveBeenCalledTimes(1);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
+    expect(selectSpy).toHaveBeenCalledWith({ newTab: false });
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, cancelable: true }));
+    expect(selectSpy).toHaveBeenCalledWith({ newTab: true });
+  });
+
+  it('should context-sensitively emit navigateHome and navigateEnd', () => {
+    const el = fixture.nativeElement as HTMLElement;
+    const input = el.querySelector<HTMLInputElement>('[data-testid="filter-input"]')!;
+
+    const homeSpy = vi.fn();
+    const endSpy = vi.fn();
+    component.navigateHome.subscribe(homeSpy);
+    component.navigateEnd.subscribe(endSpy);
+
+    // 1. Query is empty: Home and End emit navigation
+    component.query.set('');
+    fixture.componentRef.setInput('hasSelection', false);
+    fixture.detectChanges();
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', cancelable: true }));
+    expect(homeSpy).toHaveBeenCalledTimes(1);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', cancelable: true }));
+    expect(endSpy).toHaveBeenCalledTimes(1);
+
+    // 2. Query is present and no selection: Home and End are preserved for text caret (not emitted)
+    component.query.set('angular');
+    fixture.componentRef.setInput('hasSelection', false);
+    fixture.detectChanges();
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', cancelable: true }));
+    expect(homeSpy).toHaveBeenCalledTimes(1); // Still 1
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', cancelable: true }));
+    expect(endSpy).toHaveBeenCalledTimes(1); // Still 1
+
+    // 3. Query is present but hasSelection is true: Home and End navigate the list
+    fixture.componentRef.setInput('hasSelection', true);
+    fixture.detectChanges();
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', cancelable: true }));
+    expect(homeSpy).toHaveBeenCalledTimes(2);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', cancelable: true }));
+    expect(endSpy).toHaveBeenCalledTimes(2);
+
+    // 4. Query is present, no selection, but Ctrl+Home / Ctrl+End is pressed
+    fixture.componentRef.setInput('hasSelection', false);
+    fixture.detectChanges();
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', ctrlKey: true, cancelable: true }));
+    expect(homeSpy).toHaveBeenCalledTimes(3);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', ctrlKey: true, cancelable: true }));
+    expect(endSpy).toHaveBeenCalledTimes(3);
+  });
 });

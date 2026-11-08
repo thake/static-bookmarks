@@ -1,6 +1,16 @@
 <header class="top-bar">
   <div class="top-bar-inner">
-    <app-filter-bar [(query)]="filterQuery" />
+    <app-filter-bar
+      [query]="filterQuery()"
+      [hasSelection]="selectedIndex() >= 0"
+      (queryChange)="onQueryChange($event)"
+      (navigateDown)="onNavigateDown()"
+      (navigateUp)="onNavigateUp()"
+      (navigateHome)="onNavigateHome()"
+      (navigateEnd)="onNavigateEnd()"
+      (selectCurrent)="onSelectCurrent($event)"
+      (escapePressed)="onEscape()"
+    />
   </div>
 </header>
 
@@ -40,6 +50,7 @@
                 [faviconSrc]="faviconsMap()[bookmark.url] || null"
                 [filterTokens]="filterTokens()"
                 [activeTag]="filterQuery()"
+                [isSelected]="selectedUrl() === bookmark.url"
                 (tagClick)="toggleTag($event)"
               ></li>
             }

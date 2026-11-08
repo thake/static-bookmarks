@@ -2,6 +2,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
+  ElementRef,
+  inject,
   input,
   output,
   signal,
@@ -16,18 +19,34 @@ import { Bookmark } from '../bookmark.model';
   host: {
     class: 'bookmark-item',
     'data-testid': 'bookmark-item',
+    '[class.selected]': 'isSelected()',
+    '[attr.aria-selected]': 'isSelected()',
   },
 })
 export class BookmarkItem {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
   readonly bookmark = input.required<Bookmark>();
   readonly faviconSrc = input<string | null>(null);
   readonly filterTokens = input<readonly string[]>([]);
   readonly activeTag = input<string>('');
+  readonly isSelected = input<boolean>(false);
 
   readonly tagClick = output<string>();
 
   readonly isExpanded = signal(false);
   readonly faviconFailed = signal(false);
+
+  constructor() {
+    effect(() => {
+      if (this.isSelected()) {
+        this.elementRef.nativeElement.scrollIntoView?.({
+          block: 'nearest',
+          behavior: 'auto',
+        });
+      }
+    });
+  }
 
   readonly hostname = computed(() => {
     try {
