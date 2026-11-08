@@ -534,4 +534,38 @@ test.describe('Static Bookmarks Application', () => {
     expect(typingBox).not.toBeNull();
     expect(typingBox!.height).toBe(initialBox!.height);
   });
+
+  test('has scrollbar-gutter: stable configured on the root element to prevent screen jump when scrollbars disappear', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const scrollbarGutter = await page.evaluate(() => {
+      return window.getComputedStyle(document.documentElement).scrollbarGutter;
+    });
+
+    expect(scrollbarGutter).toBe('stable');
+  });
+
+  test('renders clear button with an icon on mobile viewport and clears query on click', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/');
+
+    const filterInput = page.getByTestId('filter-input');
+    await filterInput.fill('regex');
+
+    const clearBtn = page.getByTestId('clear-filter-button');
+    await expect(clearBtn).toBeVisible();
+    await expect(clearBtn.locator('svg.clear-icon')).toBeVisible();
+    await expect(clearBtn).toHaveAttribute('aria-label', 'Filter zurücksetzen');
+
+    // Click clear button to reset
+    await clearBtn.click();
+    await expect(filterInput).toHaveValue('');
+    await expect(filterInput).toBeFocused();
+    await expect(clearBtn).not.toBeVisible();
+  });
 });
+

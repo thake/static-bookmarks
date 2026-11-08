@@ -34,6 +34,8 @@ describe('FilterBar', () => {
     expect(component.query()).toBe('angular');
     const clearBtn = el.querySelector<HTMLButtonElement>('[data-testid="clear-filter-button"]');
     expect(clearBtn).toBeTruthy();
+    expect(clearBtn?.querySelector('svg.clear-icon')).toBeTruthy();
+    expect(clearBtn?.getAttribute('aria-label')).toBe('Filter zurücksetzen');
   });
 
   it('should clear query and refocus input when clear is called', () => {
