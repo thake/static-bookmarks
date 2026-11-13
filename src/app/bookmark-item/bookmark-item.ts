@@ -96,6 +96,12 @@ export class BookmarkItem {
     this.bookmarkClick.emit(this.bookmark());
   }
 
+  onLinkAuxClick(event: MouseEvent): void {
+    if (event.button === 1) {
+      this.bookmarkClick.emit(this.bookmark());
+    }
+  }
+
   onTagClick(tag: string): void {
     this.tagClick.emit(tag);
   }

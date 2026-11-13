@@ -650,6 +650,38 @@ describe('App (Static Bookmarks)', () => {
       const stored = JSON.parse(localStorage.getItem(CLICKS_STORAGE_KEY) || '{}');
       expect(stored['https://regex101.com']).toBe(1);
     });
+
+    it('should record click when bookmark item is middle-clicked (auxclick button 1) and make top category appear', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="category-heading"]')?.textContent?.trim()).toBe(
+        'Development & Docs',
+      );
+
+      // Middle-click on Regex101 link (button 1)
+      const links = el.querySelectorAll<HTMLAnchorElement>('[data-testid="bookmark-link"]');
+      const regexLink = Array.from(links).find(
+        (a) => a.getAttribute('href') === 'https://regex101.com',
+      )!;
+      regexLink.dispatchEvent(new MouseEvent('auxclick', { button: 1, bubbles: true }));
+      fixture.detectChanges();
+
+      // Top category should now appear
+      const headings = Array.from(el.querySelectorAll('[data-testid="category-heading"]')).map(
+        (h) => h.textContent?.trim(),
+      );
+      expect(headings[0]).toBe(App.TOP_CATEGORY_NAME);
+
+      // Verify localStorage was updated
+      const stored = JSON.parse(localStorage.getItem(CLICKS_STORAGE_KEY) || '{}');
+      expect(stored['https://regex101.com']).toBe(1);
+    });
   });
 
   describe('User Settings integration', () => {

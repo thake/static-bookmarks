@@ -187,4 +187,49 @@ describe('BookmarkItem', () => {
     expect(el.querySelector('[data-testid="bookmark-favicon"]')).toBeNull();
     expect(el.querySelector('[data-testid="bookmark-favicon-fallback"]')).toBeTruthy();
   });
+
+  it('should emit bookmarkClick when bookmark link is left-clicked', () => {
+    const bookmark = { name: 'Left Click Item', url: 'https://example.com/left' };
+    fixture.componentRef.setInput('bookmark', bookmark);
+    fixture.detectChanges();
+
+    let clickedBookmark: any = null;
+    component.bookmarkClick.subscribe((b) => (clickedBookmark = b));
+
+    const el = fixture.nativeElement as HTMLElement;
+    const link = el.querySelector<HTMLAnchorElement>('[data-testid="bookmark-link"]')!;
+    link.click();
+
+    expect(clickedBookmark).toEqual(bookmark);
+  });
+
+  it('should emit bookmarkClick when bookmark link is middle-clicked (auxclick with button 1)', () => {
+    const bookmark = { name: 'Middle Click Item', url: 'https://example.com/middle' };
+    fixture.componentRef.setInput('bookmark', bookmark);
+    fixture.detectChanges();
+
+    let clickedBookmark: any = null;
+    component.bookmarkClick.subscribe((b) => (clickedBookmark = b));
+
+    const el = fixture.nativeElement as HTMLElement;
+    const link = el.querySelector<HTMLAnchorElement>('[data-testid="bookmark-link"]')!;
+    link.dispatchEvent(new MouseEvent('auxclick', { button: 1, bubbles: true }));
+
+    expect(clickedBookmark).toEqual(bookmark);
+  });
+
+  it('should not emit bookmarkClick when auxclick is fired with non-middle button (e.g. right click button 2)', () => {
+    const bookmark = { name: 'Right Click Item', url: 'https://example.com/right' };
+    fixture.componentRef.setInput('bookmark', bookmark);
+    fixture.detectChanges();
+
+    let clickedBookmark: any = null;
+    component.bookmarkClick.subscribe((b) => (clickedBookmark = b));
+
+    const el = fixture.nativeElement as HTMLElement;
+    const link = el.querySelector<HTMLAnchorElement>('[data-testid="bookmark-link"]')!;
+    link.dispatchEvent(new MouseEvent('auxclick', { button: 2, bubbles: true }));
+
+    expect(clickedBookmark).toBeNull();
+  });
 });

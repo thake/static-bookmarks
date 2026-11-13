@@ -687,6 +687,41 @@ test.describe('Static Bookmarks Application', () => {
     expect(storedClicks['https://regex101.com']).toBe(1);
   });
 
+  test('counts middle-mouse button clicks on bookmark links and updates localStorage and top category', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const categories = page.getByTestId('category-heading');
+    await expect(categories).toHaveCount(2);
+
+    // Prevent default navigation for auxclick so page stays intact during assertion
+    await page.evaluate(() => {
+      document.addEventListener('auxclick', (e) => {
+        const target = (e.target as HTMLElement).closest('a');
+        if (target) {
+          e.preventDefault();
+        }
+      });
+    });
+
+    const regexLink = page.locator('a[href="https://regex101.com"]').first();
+    await regexLink.click({ button: 'middle' });
+
+    // "Häufig von dir genutzt" category appears dynamically at the top
+    await expect(categories).toHaveCount(3);
+    await expect(categories.first()).toHaveText('Häufig von dir genutzt');
+
+    const topSection = page.getByTestId('category-group').first();
+    await expect(topSection.locator('a[href="https://regex101.com"]')).toBeVisible();
+
+    // Verify localStorage persistence
+    const storedClicks = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('sb_bookmark_clicks') || '{}'),
+    );
+    expect(storedClicks['https://regex101.com']).toBe(1);
+  });
+
   test('navigates cleanly through "Häufig von dir genutzt" with row-isolated keyboard selection', async ({
     page,
   }) => {
