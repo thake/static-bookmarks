@@ -1,36 +1,60 @@
 <search class="filter-bar" aria-label="Lesezeichen filtern">
-  <svg class="search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-    <circle cx="8.5" cy="8.5" r="5.5" />
-    <path d="M13 13l4 4" stroke-linecap="round" />
-  </svg>
-  <input
-    #searchInput
-    type="search"
-    class="filter-input"
-    data-testid="filter-input"
-    placeholder="Lesezeichen nach Name, Tag, Beschreibung oder Kategorie filtern..."
-    aria-label="Lesezeichen filtern"
-    autocomplete="off"
-    spellcheck="false"
-    autofocus
-    [value]="query()"
-    (input)="updateFilter($event)"
-    (keydown)="onInputKeydown($event)"
-  />
-  @if (query()) {
-    <button
-      type="button"
-      class="clear-btn"
-      data-testid="clear-filter-button"
-      (click)="clear()"
-      aria-label="Filter zurücksetzen"
-      title="Filter zurücksetzen"
+  <form
+    role="search"
+    method="get"
+    action="./"
+    class="filter-form"
+    (submit)="$event.preventDefault()"
+  >
+    <svg
+      class="search-icon"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      aria-hidden="true"
     >
-      <svg class="clear-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-        <path d="M5 5l10 10M15 5L5 15" />
-      </svg>
-    </button>
-  } @else {
-    <kbd class="shortcut-hint" aria-hidden="true">/</kbd>
-  }
+      <circle cx="8.5" cy="8.5" r="5.5" />
+      <path d="M13 13l4 4" stroke-linecap="round" />
+    </svg>
+    <input
+      #searchInput
+      type="search"
+      name="q"
+      class="filter-input"
+      data-testid="filter-input"
+      placeholder="Lesezeichen nach Name, Tag, Beschreibung oder Kategorie filtern..."
+      aria-label="Lesezeichen filtern"
+      autocomplete="off"
+      spellcheck="false"
+      autofocus
+      [value]="query()"
+      (input)="updateFilter($event)"
+      (keydown)="onInputKeydown($event)"
+    />
+    @if (query()) {
+      <button
+        type="button"
+        class="clear-btn"
+        data-testid="clear-filter-button"
+        (click)="clear()"
+        aria-label="Filter zurücksetzen"
+        title="Filter zurücksetzen"
+      >
+        <svg
+          class="clear-icon"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M5 5l10 10M15 5L5 15" />
+        </svg>
+      </button>
+    } @else {
+      <kbd class="shortcut-hint" aria-hidden="true">/</kbd>
+    }
+  </form>
 </search>

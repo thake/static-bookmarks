@@ -12,12 +12,18 @@
   padding: 0.5rem 0.875rem;
   min-block-size: 2.75rem;
   box-sizing: border-box;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .filter-bar:focus-within {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--border-focus) 20%, transparent);
+}
+
+.filter-form {
+  display: contents;
 }
 
 .search-icon {
@@ -61,7 +67,9 @@
   cursor: pointer;
   flex-shrink: 0;
   line-height: 1;
-  transition: background-color 100ms ease, color 100ms ease;
+  transition:
+    background-color 100ms ease,
+    color 100ms ease;
 }
 
 .clear-btn::before {

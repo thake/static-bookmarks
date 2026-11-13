@@ -70,17 +70,9 @@ export class FilterBar {
   onWindowKeydown(event: KeyboardEvent): void {
     const target = event.target as HTMLElement | null;
     const isInputFocused =
-      target?.tagName === 'INPUT' ||
-      target?.tagName === 'TEXTAREA' ||
-      target?.isContentEditable;
+      target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
 
-    if (
-      event.key === '/' &&
-      !isInputFocused &&
-      !event.ctrlKey &&
-      !event.metaKey &&
-      !event.altKey
-    ) {
+    if (event.key === '/' && !isInputFocused && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
       this.searchInput()?.nativeElement.focus();
     } else if (event.key === 'Escape') {

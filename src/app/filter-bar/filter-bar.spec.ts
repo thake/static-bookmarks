@@ -15,12 +15,25 @@ describe('FilterBar', () => {
     fixture.detectChanges();
   });
 
-  it('should render search input with placeholder and autofocus', () => {
+  it('should render search input with placeholder, autofocus, and name="q"', () => {
     const el = fixture.nativeElement as HTMLElement;
     const input = el.querySelector<HTMLInputElement>('[data-testid="filter-input"]')!;
     expect(input).toBeTruthy();
     expect(input.hasAttribute('autofocus')).toBe(true);
+    expect(input.getAttribute('name')).toBe('q');
     expect(input.getAttribute('placeholder')).toContain('Lesezeichen nach Name');
+  });
+
+  it('should wrap search input in a semantic form with role="search", method="get", and prevent form reload on submit', () => {
+    const el = fixture.nativeElement as HTMLElement;
+    const form = el.querySelector<HTMLFormElement>('form[role="search"]')!;
+    expect(form).toBeTruthy();
+    expect(form.getAttribute('method')?.toLowerCase()).toBe('get');
+    expect(form.getAttribute('action')).toBe('./');
+
+    const submitEvent = new Event('submit', { cancelable: true });
+    form.dispatchEvent(submitEvent);
+    expect(submitEvent.defaultPrevented).toBe(true);
   });
 
   it('should update query when user inputs text and show clear button', () => {
@@ -101,7 +114,9 @@ describe('FilterBar', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
     expect(selectSpy).toHaveBeenCalledWith({ newTab: false });
 
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, cancelable: true }));
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, cancelable: true }),
+    );
     expect(selectSpy).toHaveBeenCalledWith({ newTab: true });
   });
 
@@ -150,10 +165,14 @@ describe('FilterBar', () => {
     fixture.componentRef.setInput('hasSelection', false);
     fixture.detectChanges();
 
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', ctrlKey: true, cancelable: true }));
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Home', ctrlKey: true, cancelable: true }),
+    );
     expect(homeSpy).toHaveBeenCalledTimes(3);
 
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', ctrlKey: true, cancelable: true }));
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'End', ctrlKey: true, cancelable: true }),
+    );
     expect(endSpy).toHaveBeenCalledTimes(3);
   });
 });

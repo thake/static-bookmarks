@@ -1,9 +1,5 @@
 @if (isOpen()) {
-  <div
-    class="modal-backdrop"
-    data-testid="settings-backdrop"
-    (click)="onBackdropClick($event)"
-  >
+  <div class="modal-backdrop" data-testid="settings-backdrop" (click)="onBackdropClick($event)">
     <div
       class="modal-card"
       role="dialog"
@@ -58,6 +54,53 @@
             </div>
           </label>
         </div>
+
+        <div class="settings-divider" aria-hidden="true"></div>
+
+        <section class="settings-section" data-testid="search-shortcut-section">
+          <div class="setting-text">
+            <span class="setting-label">Browsersuche per Adresszeile</span>
+            <span class="setting-description">
+              Durchsuche deine Lesezeichen direkt über die Adressleiste des Browsers per Suchkürzel
+              (z.B. <kbd>bm</kbd> oder <kbd>Tab</kbd>).
+            </span>
+          </div>
+
+          <div class="shortcut-steps">
+            <p class="step-text">
+              <strong>Chrome / Edge / Brave:</strong> Automatisch erkannt. Unter
+              <em>Einstellungen → Suchmaschine → Website-Suche</em> kannst du ein Kürzel wie
+              <kbd>bm</kbd> aktivieren.
+            </p>
+            <p class="step-text">
+              <strong>Firefox:</strong> Über das Symbol in der Adressleiste hinzufügen oder unter
+              <em>Einstellungen → Suche</em> ein Schlüsselwort (z.B. <kbd>bm</kbd>) vergeben.
+            </p>
+          </div>
+
+          <div class="search-url-box">
+            <span class="search-url-label">Such-URL-Vorlage:</span>
+            <div class="search-url-row">
+              <code class="search-url-code" data-testid="search-url-template">{{
+                searchUrlTemplate()
+              }}</code>
+              <button
+                type="button"
+                class="copy-btn"
+                data-testid="copy-search-url-button"
+                (click)="copySearchUrl()"
+                aria-label="Such-URL kopieren"
+                title="Such-URL in Zwischenablage kopieren"
+              >
+                @if (isCopied()) {
+                  <span class="copied-feedback">Kopiert!</span>
+                } @else {
+                  <span>Kopieren</span>
+                }
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   </div>

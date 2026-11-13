@@ -53,7 +53,7 @@ test.describe('Static Bookmarks Application', () => {
     await expect(filterInput).toBeFocused();
     await expect(filterInput).toHaveAttribute(
       'placeholder',
-      'Lesezeichen nach Name, Tag, Beschreibung oder Kategorie filtern...'
+      'Lesezeichen nach Name, Tag, Beschreibung oder Kategorie filtern...',
     );
 
     const categories = page.getByTestId('category-heading');
@@ -101,7 +101,7 @@ test.describe('Static Bookmarks Application', () => {
     // Native browser tooltip via title attribute
     await expect(firstLink).toHaveAttribute(
       'title',
-      'Official documentation, guides, and API reference for modern Angular.'
+      'Official documentation, guides, and API reference for modern Angular.',
     );
 
     // Custom tooltip element should not exist
@@ -129,9 +129,7 @@ test.describe('Static Bookmarks Application', () => {
     await expect(lastItem.getByTestId('bookmark-tag')).toHaveCount(0);
   });
 
-  test('handles emojis in the title with native tooltip', async ({
-    page,
-  }) => {
+  test('handles emojis in the title with native tooltip', async ({ page }) => {
     const EMOJI_BOOKMARKS = {
       'Cloud & Tools': [
         {
@@ -170,7 +168,7 @@ test.describe('Static Bookmarks Application', () => {
     // Native tooltip attribute on link
     await expect(firstLink).toHaveAttribute(
       'title',
-      'Comprehensive platform for building web and mobile applications.'
+      'Comprehensive platform for building web and mobile applications.',
     );
 
     // Verify row with emoji maintains single-line height
@@ -222,7 +220,7 @@ test.describe('Static Bookmarks Application', () => {
     // Native tooltip attribute holds long description
     await expect(link).toHaveAttribute(
       'title',
-      'This is a comprehensive description explaining all details about this bookmark item that should only be visible when the user hovers over it.'
+      'This is a comprehensive description explaining all details about this bookmark item that should only be visible when the user hovers over it.',
     );
 
     // Item must remain single line height (compact)
@@ -231,15 +229,11 @@ test.describe('Static Bookmarks Application', () => {
     expect(box!.height).toBeLessThanOrEqual(42);
 
     // Container must NOT have horizontal scroll/overflow
-    const isListOverflowing = await listEl.evaluate(
-      (el) => el.scrollWidth > el.clientWidth + 1
-    );
+    const isListOverflowing = await listEl.evaluate((el) => el.scrollWidth > el.clientWidth + 1);
     expect(isListOverflowing).toBe(false);
 
     // Name element must truncate with ellipsis (scrollWidth > clientWidth)
-    const isNameTruncated = await nameEl.evaluate(
-      (el) => el.scrollWidth > el.clientWidth
-    );
+    const isNameTruncated = await nameEl.evaluate((el) => el.scrollWidth > el.clientWidth);
     expect(isNameTruncated).toBe(true);
   });
 
@@ -291,7 +285,7 @@ test.describe('Static Bookmarks Application', () => {
     await expect(firstTag).toHaveText('angular');
 
     await firstTag.click();
-    await expect(page).toHaveURL(/localhost(:\d+)?\/?$/);
+    await expect(page).toHaveURL(/localhost(:\d+)?\/?(\?q=angular)?$/);
     await expect(page.getByTestId('filter-input')).toHaveValue('angular');
     await expect(items).toHaveCount(1);
   });
@@ -481,7 +475,7 @@ test.describe('Static Bookmarks Application', () => {
     // 1. Initial state (tags collapsed behind +3 button):
     // The name should be fully displayed without ellipsis; the URL host must shrink first if needed.
     const isNameTruncatedInitial = await nameEl.evaluate(
-      (el) => el.scrollWidth > el.clientWidth + 1
+      (el) => el.scrollWidth > el.clientWidth + 1,
     );
     expect(isNameTruncatedInitial).toBe(false);
 
@@ -490,14 +484,12 @@ test.describe('Static Bookmarks Application', () => {
 
     // Even with tags expanded, URL host and tags space must yield room so the name is not truncated
     const isNameTruncatedExpanded = await nameEl.evaluate(
-      (el) => el.scrollWidth > el.clientWidth + 1
+      (el) => el.scrollWidth > el.clientWidth + 1,
     );
     expect(isNameTruncatedExpanded).toBe(false);
 
     // The host must be truncated or shrunk to yield space to the name
-    const isHostTruncated = await hostEl.evaluate(
-      (el) => el.scrollWidth > el.clientWidth
-    );
+    const isHostTruncated = await hostEl.evaluate((el) => el.scrollWidth > el.clientWidth);
     expect(isHostTruncated).toBe(true);
   });
 
@@ -625,7 +617,7 @@ test.describe('Static Bookmarks Application', () => {
     page,
   }) => {
     await page.route('https://regex101.com/**', (route) =>
-      route.fulfill({ status: 200, contentType: 'text/html', body: '<h1>Regex101</h1>' })
+      route.fulfill({ status: 200, contentType: 'text/html', body: '<h1>Regex101</h1>' }),
     );
 
     await page.goto('/');
@@ -669,7 +661,7 @@ test.describe('Static Bookmarks Application', () => {
 
     // Verify localStorage persistence
     const storedClicks = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem('sb_bookmark_clicks') || '{}')
+      JSON.parse(localStorage.getItem('sb_bookmark_clicks') || '{}'),
     );
     expect(storedClicks['https://regex101.com']).toBe(1);
   });
@@ -683,7 +675,7 @@ test.describe('Static Bookmarks Application', () => {
         'sb_bookmark_clicks',
         JSON.stringify({
           'https://angular.dev': 5,
-        })
+        }),
       );
     });
 
@@ -719,7 +711,7 @@ test.describe('Static Bookmarks Application', () => {
         'sb_bookmark_clicks',
         JSON.stringify({
           'https://angular.dev': 5,
-        })
+        }),
       );
     });
 
@@ -755,7 +747,7 @@ test.describe('Static Bookmarks Application', () => {
 
     // Verify localStorage persistence
     const storedSettings = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem('sb_user_settings') || '{}')
+      JSON.parse(localStorage.getItem('sb_user_settings') || '{}'),
     );
     expect(storedSettings.showTopUsedLinks).toBe(false);
 
@@ -780,5 +772,73 @@ test.describe('Static Bookmarks Application', () => {
     // Top category should be back
     await expect(categories.first()).toHaveText('Häufig von dir genutzt');
   });
-});
 
+  test.describe('Browser Search Shortcuts & Omnibox Integration', () => {
+    test('navigates directly to /?q=regex and filters bookmarks immediately on load', async ({
+      page,
+    }) => {
+      await page.goto('/?q=regex');
+
+      const filterInput = page.getByTestId('filter-input');
+      await expect(filterInput).toHaveValue('regex');
+
+      const categories = page.getByTestId('category-heading');
+      await expect(categories).toHaveCount(1);
+      await expect(categories.first()).toHaveText('Tools & Utilities');
+
+      const links = page.getByTestId('bookmark-link');
+      await expect(links).toHaveCount(1);
+      await expect(links.first()).toContainText('Regex101');
+    });
+
+    test('typing in filter input updates browser URL without reloading page', async ({ page }) => {
+      await page.goto('/');
+
+      const filterInput = page.getByTestId('filter-input');
+      await filterInput.fill('docs');
+
+      await expect(page).toHaveURL(/.*[?&]q=docs/);
+
+      // Clearing filter removes ?q=
+      await page.getByTestId('clear-filter-button').click();
+      await expect(page).not.toHaveURL(/[?&]q=/);
+    });
+
+    test('exposes OpenSearch autodiscovery link and serves valid opensearch.xml', async ({
+      page,
+    }) => {
+      await page.goto('/');
+
+      const openSearchLink = page.locator('link[rel="search"]');
+      await expect(openSearchLink).toHaveAttribute('type', 'application/opensearchdescription+xml');
+      await expect(openSearchLink).toHaveAttribute('href', 'opensearch.xml');
+
+      const response = await page.request.get('/opensearch.xml');
+      expect(response.status()).toBe(200);
+
+      const xmlBody = await response.text();
+      expect(xmlBody).toContain('<OpenSearchDescription');
+      expect(xmlBody).toContain('<ShortName>Lesezeichen</ShortName>');
+      expect(xmlBody).toContain('template="./?q={searchTerms}"');
+    });
+
+    test('displays search shortcut setup and URL template in settings modal', async ({ page }) => {
+      await page.goto('/');
+
+      await page.getByTestId('settings-button').click();
+      const modal = page.getByTestId('settings-modal');
+      await expect(modal).toBeVisible();
+
+      const shortcutSection = page.getByTestId('search-shortcut-section');
+      await expect(shortcutSection).toBeVisible();
+      await expect(shortcutSection).toContainText('Browsersuche per Adresszeile');
+
+      const template = page.getByTestId('search-url-template');
+      await expect(template).toBeVisible();
+      await expect(template).toContainText('?q=%s');
+
+      const copyBtn = page.getByTestId('copy-search-url-button');
+      await expect(copyBtn).toBeVisible();
+    });
+  });
+});

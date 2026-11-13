@@ -41,7 +41,9 @@ describe('SettingsModal', () => {
     const title = fixture.nativeElement.querySelector('#settings-title');
     expect(title?.textContent?.trim()).toBe('Einstellungen');
 
-    const toggle = fixture.nativeElement.querySelector('[data-testid="toggle-top-links"]') as HTMLInputElement;
+    const toggle = fixture.nativeElement.querySelector(
+      '[data-testid="toggle-top-links"]',
+    ) as HTMLInputElement;
     expect(toggle).not.toBeNull();
     expect(toggle.checked).toBe(true);
   });
@@ -50,7 +52,9 @@ describe('SettingsModal', () => {
     component.isOpen.set(true);
     fixture.detectChanges();
 
-    const toggle = fixture.nativeElement.querySelector('[data-testid="toggle-top-links"]') as HTMLInputElement;
+    const toggle = fixture.nativeElement.querySelector(
+      '[data-testid="toggle-top-links"]',
+    ) as HTMLInputElement;
     expect(settingsService.showTopUsedLinks()).toBe(true);
 
     toggle.checked = false;
@@ -73,7 +77,9 @@ describe('SettingsModal', () => {
     const closedSpy = vi.fn();
     component.closed.subscribe(closedSpy);
 
-    const closeBtn = fixture.nativeElement.querySelector('[data-testid="close-settings-button"]') as HTMLButtonElement;
+    const closeBtn = fixture.nativeElement.querySelector(
+      '[data-testid="close-settings-button"]',
+    ) as HTMLButtonElement;
     closeBtn.click();
     fixture.detectChanges();
 
@@ -85,7 +91,9 @@ describe('SettingsModal', () => {
     component.isOpen.set(true);
     fixture.detectChanges();
 
-    const backdrop = fixture.nativeElement.querySelector('[data-testid="settings-backdrop"]') as HTMLElement;
+    const backdrop = fixture.nativeElement.querySelector(
+      '[data-testid="settings-backdrop"]',
+    ) as HTMLElement;
     backdrop.click();
     fixture.detectChanges();
 
@@ -100,5 +108,46 @@ describe('SettingsModal', () => {
     fixture.detectChanges();
 
     expect(component.isOpen()).toBe(false);
+  });
+
+  describe('Browser Search Shortcut Section', () => {
+    it('should display browser search section and search URL template', () => {
+      component.isOpen.set(true);
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const section = el.querySelector('[data-testid="search-shortcut-section"]');
+      expect(section).toBeTruthy();
+      expect(section?.textContent).toContain('Browsersuche');
+
+      const templateEl = el.querySelector('[data-testid="search-url-template"]');
+      expect(templateEl).toBeTruthy();
+      expect(templateEl?.textContent).toContain('?q=%s');
+    });
+
+    it('should copy search URL template to clipboard when clicking copy button and show feedback', async () => {
+      const writeTextMock = vi.fn().mockResolvedValue(undefined);
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: writeTextMock,
+        },
+      });
+
+      component.isOpen.set(true);
+      fixture.detectChanges();
+
+      const copyBtn = fixture.nativeElement.querySelector(
+        '[data-testid="copy-search-url-button"]',
+      ) as HTMLButtonElement;
+      expect(copyBtn).toBeTruthy();
+      expect(copyBtn.textContent?.trim()).toBe('Kopieren');
+
+      copyBtn.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(writeTextMock).toHaveBeenCalledWith(component.searchUrlTemplate());
+      expect(copyBtn.textContent?.trim()).toBe('Kopiert!');
+    });
   });
 });

@@ -2,16 +2,23 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   signal,
 } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { Bookmark, BookmarkCategoryGroup, BookmarksMap, SearchableBookmark } from './bookmark.model';
+import {
+  Bookmark,
+  BookmarkCategoryGroup,
+  BookmarksMap,
+  SearchableBookmark,
+} from './bookmark.model';
 import { FilterBar } from './filter-bar/filter-bar';
 import { BookmarkItem } from './bookmark-item/bookmark-item';
 import { ClickTrackingService } from './click-tracking.service';
 import { SettingsService } from './settings.service';
 import { SettingsModal } from './settings-modal/settings-modal';
+import { SearchUrlService } from './search-url.service';
 
 @Component({
   selector: 'app-root',
@@ -28,14 +35,24 @@ export class App {
 
   private readonly clickTracker = inject(ClickTrackingService);
   readonly settingsService = inject(SettingsService);
+  private readonly searchUrlService = inject(SearchUrlService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly isSettingsOpen = signal(false);
 
   readonly bookmarksResource = httpResource<BookmarksMap>(() => './bookmarks.json');
   readonly faviconsResource = httpResource<Record<string, string>>(() => './favicons.json');
 
-  readonly filterQuery = signal('');
+  readonly filterQuery = signal(this.searchUrlService.getInitialQuery());
   readonly selectedIndex = signal<number>(-1);
+
+  constructor() {
+    const unlisten = this.searchUrlService.listenPopState((query) => {
+      this.filterQuery.set(query);
+      this.selectedIndex.set(-1);
+    });
+    this.destroyRef.onDestroy(unlisten);
+  }
 
   readonly faviconsMap = computed(() => this.faviconsResource.value() ?? {});
 
@@ -112,8 +129,8 @@ export class App {
         const categoryLower = group.category.toLowerCase();
         const matchingBookmarks = group.bookmarks.filter((bookmark) =>
           tokens.every(
-            (token) => categoryLower.includes(token) || bookmark.searchIndex.includes(token)
-          )
+            (token) => categoryLower.includes(token) || bookmark.searchIndex.includes(token),
+          ),
         );
         return {
           category: group.category,
@@ -129,13 +146,11 @@ export class App {
         category: group.category,
         bookmark,
         key: `${group.category}::${bookmark.url}`,
-      }))
-    )
+      })),
+    ),
   );
 
-  readonly flatBookmarks = computed(() =>
-    this.flatBookmarkItems().map((item) => item.bookmark)
-  );
+  readonly flatBookmarks = computed(() => this.flatBookmarkItems().map((item) => item.bookmark));
 
   readonly selectedItemKey = computed(() => {
     const items = this.flatBookmarkItems();
@@ -160,6 +175,7 @@ export class App {
   onQueryChange(value: string): void {
     this.filterQuery.set(value);
     this.selectedIndex.set(-1);
+    this.searchUrlService.updateQuery(value);
   }
 
   onNavigateDown(): void {
@@ -243,9 +259,7 @@ export class App {
 
     const target = event.target as HTMLElement | null;
     const isInput =
-      target?.tagName === 'INPUT' ||
-      target?.tagName === 'TEXTAREA' ||
-      target?.isContentEditable;
+      target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
 
     if (isInput) {
       return;
@@ -274,16 +288,15 @@ export class App {
 
   toggleTag(tag: string): void {
     const current = this.filterQuery().trim().toLowerCase();
-    if (current === tag.toLowerCase()) {
-      this.filterQuery.set('');
-    } else {
-      this.filterQuery.set(tag);
-    }
+    const next = current === tag.toLowerCase() ? '' : tag;
+    this.filterQuery.set(next);
     this.selectedIndex.set(-1);
+    this.searchUrlService.updateQuery(next);
   }
 
   clearFilter(): void {
     this.filterQuery.set('');
     this.selectedIndex.set(-1);
+    this.searchUrlService.updateQuery('');
   }
 }

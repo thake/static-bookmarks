@@ -5,6 +5,7 @@ import { App } from './app';
 import { BookmarksMap } from './bookmark.model';
 import { ClickTrackingService, CLICKS_STORAGE_KEY } from './click-tracking.service';
 import { SettingsService, SETTINGS_STORAGE_KEY } from './settings.service';
+import { SearchUrlService } from './search-url.service';
 
 const MOCK_BOOKMARKS: BookmarksMap = {
   'Development & Docs': [
@@ -40,6 +41,7 @@ describe('App (Static Bookmarks)', () => {
 
   beforeEach(async () => {
     localStorage.clear();
+    window.history.replaceState(null, '', '/');
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [provideHttpClient(), provideHttpClientTesting()],
@@ -51,11 +53,12 @@ describe('App (Static Bookmarks)', () => {
   afterEach(() => {
     httpMock.verify();
     localStorage.clear();
+    window.history.replaceState(null, '', '/');
   });
 
   function flushBookmarks(
     data: BookmarksMap = MOCK_BOOKMARKS,
-    favicons: Record<string, string> = { 'https://angular.dev': 'favicons/angular.png' }
+    favicons: Record<string, string> = { 'https://angular.dev': 'favicons/angular.png' },
   ) {
     const req = httpMock.expectOne('./bookmarks.json');
     expect(req.request.method).toBe('GET');
@@ -75,13 +78,13 @@ describe('App (Static Bookmarks)', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    const categoryHeadings = Array.from(el.querySelectorAll('[data-testid="category-heading"]')).map(
-      (h) => h.textContent?.trim()
-    );
+    const categoryHeadings = Array.from(
+      el.querySelectorAll('[data-testid="category-heading"]'),
+    ).map((h) => h.textContent?.trim());
     expect(categoryHeadings).toEqual(['Development & Docs', 'Tools & Utilities']);
 
     const bookmarkLinks = Array.from(
-      el.querySelectorAll<HTMLAnchorElement>('[data-testid="bookmark-link"]')
+      el.querySelectorAll<HTMLAnchorElement>('[data-testid="bookmark-link"]'),
     );
     expect(bookmarkLinks.length).toBe(4);
     expect(bookmarkLinks[0].getAttribute('href')).toBe('https://angular.dev');
@@ -109,13 +112,15 @@ describe('App (Static Bookmarks)', () => {
 
     // First bookmark has description in native title attribute and 3 tags (initially hidden with +3 button)
     expect(items[0].querySelector('[data-testid="bookmark-link"]')?.getAttribute('title')).toBe(
-      'Official documentation, guides, and API reference for modern Angular.'
+      'Official documentation, guides, and API reference for modern Angular.',
     );
     expect(items[0].querySelector('.bookmark-tooltip')).toBeNull();
 
     // Initially, tags are hidden and +3 button is shown
     expect(items[0].querySelectorAll('[data-testid="bookmark-tag"]').length).toBe(0);
-    const expandBtn = items[0].querySelector<HTMLButtonElement>('[data-testid="expand-tags-button"]')!;
+    const expandBtn = items[0].querySelector<HTMLButtonElement>(
+      '[data-testid="expand-tags-button"]',
+    )!;
     expect(expandBtn).toBeTruthy();
     expect(expandBtn.textContent?.trim()).toBe('+3');
 
@@ -124,12 +129,14 @@ describe('App (Static Bookmarks)', () => {
     fixture.detectChanges();
 
     const firstItemTags = Array.from(items[0].querySelectorAll('[data-testid="bookmark-tag"]')).map(
-      (t) => t.textContent?.trim()
+      (t) => t.textContent?.trim(),
     );
     expect(firstItemTags).toEqual(['angular', 'frontend', 'typescript']);
 
     // Fourth bookmark has neither description nor tags nor expand button
-    expect(items[3].querySelector('[data-testid="bookmark-link"]')?.getAttribute('title')).toBeNull();
+    expect(
+      items[3].querySelector('[data-testid="bookmark-link"]')?.getAttribute('title'),
+    ).toBeNull();
     expect(items[3].querySelector('.bookmark-tooltip')).toBeNull();
     expect(items[3].querySelectorAll('[data-testid="bookmark-tag"]').length).toBe(0);
     expect(items[3].querySelector('[data-testid="expand-tags-button"]')).toBeNull();
@@ -168,7 +175,7 @@ describe('App (Static Bookmarks)', () => {
     fixture.detectChanges();
 
     const matchingTags = Array.from(item.querySelectorAll('[data-testid="bookmark-tag"]')).map(
-      (t) => t.textContent?.trim()
+      (t) => t.textContent?.trim(),
     );
     expect(matchingTags).toEqual(['tag2']);
     expect(toggleBtn.textContent?.trim()).toBe('+7');
@@ -178,7 +185,7 @@ describe('App (Static Bookmarks)', () => {
     fixture.detectChanges();
 
     const tagsExpanded = Array.from(item.querySelectorAll('[data-testid="bookmark-tag"]')).map(
-      (t) => t.textContent?.trim()
+      (t) => t.textContent?.trim(),
     );
     expect(tagsExpanded).toEqual(['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8']);
     expect(toggleBtn.textContent?.trim()).toBe('−');
@@ -188,7 +195,7 @@ describe('App (Static Bookmarks)', () => {
     fixture.detectChanges();
 
     const tagsCollapsed = Array.from(item.querySelectorAll('[data-testid="bookmark-tag"]')).map(
-      (t) => t.textContent?.trim()
+      (t) => t.textContent?.trim(),
     );
     expect(tagsCollapsed).toEqual(['tag2']);
     expect(toggleBtn.textContent?.trim()).toBe('+7');
@@ -285,14 +292,14 @@ describe('App (Static Bookmarks)', () => {
     const el = fixture.nativeElement as HTMLElement;
     const filterInput = el.querySelector<HTMLInputElement>('[data-testid="filter-input"]')!;
     expect(filterInput.getAttribute('placeholder')).toBe(
-      'Lesezeichen nach Name, Tag, Beschreibung oder Kategorie filtern...'
+      'Lesezeichen nach Name, Tag, Beschreibung oder Kategorie filtern...',
     );
 
     app.filterQuery.set('nonexistent-bookmark-xyz');
     fixture.detectChanges();
 
     expect(el.querySelector('[data-testid="empty-state"]')?.textContent).toContain(
-      'Keine Lesezeichen gefunden für'
+      'Keine Lesezeichen gefunden für',
     );
 
     const clearBtn = el.querySelector<HTMLButtonElement>('[data-testid="reset-filter-button"]')!;
@@ -396,7 +403,7 @@ describe('App (Static Bookmarks)', () => {
 
       const el = fixture.nativeElement as HTMLElement;
       const categoryHeadings = Array.from(
-        el.querySelectorAll('[data-testid="category-heading"]')
+        el.querySelectorAll('[data-testid="category-heading"]'),
       ).map((h) => h.textContent?.trim());
 
       expect(categoryHeadings).not.toContain(App.TOP_CATEGORY_NAME);
@@ -433,7 +440,7 @@ describe('App (Static Bookmarks)', () => {
 
       const el = fixture.nativeElement as HTMLElement;
       const categoryHeadings = Array.from(
-        el.querySelectorAll('[data-testid="category-heading"]')
+        el.querySelectorAll('[data-testid="category-heading"]'),
       ).map((h) => h.textContent?.trim());
 
       // Prepend at the top
@@ -441,7 +448,7 @@ describe('App (Static Bookmarks)', () => {
 
       const topCategorySection = el.querySelectorAll('[data-testid="category-group"]')[0];
       const topItems = Array.from(
-        topCategorySection.querySelectorAll('[data-testid="bookmark-link"]')
+        topCategorySection.querySelectorAll('[data-testid="bookmark-link"]'),
       ).map((a) => a.getAttribute('href'));
 
       // Capped at 10 items
@@ -467,7 +474,7 @@ describe('App (Static Bookmarks)', () => {
         JSON.stringify({
           'https://angular.dev': 3,
           'https://regex101.com': 1,
-        })
+        }),
       );
 
       const fixture = TestBed.createComponent(App);
@@ -480,7 +487,7 @@ describe('App (Static Bookmarks)', () => {
 
       const el = fixture.nativeElement as HTMLElement;
       expect(el.querySelectorAll('[data-testid="category-heading"]')[0].textContent?.trim()).toBe(
-        App.TOP_CATEGORY_NAME
+        App.TOP_CATEGORY_NAME,
       );
 
       // Search for regex
@@ -488,14 +495,16 @@ describe('App (Static Bookmarks)', () => {
       fixture.detectChanges();
 
       const filteredHeadings = Array.from(
-        el.querySelectorAll('[data-testid="category-heading"]')
+        el.querySelectorAll('[data-testid="category-heading"]'),
       ).map((h) => h.textContent?.trim());
 
       // Both "Häufig von dir genutzt" (containing Regex101) and "Tools & Utilities" match
       expect(filteredHeadings).toEqual([App.TOP_CATEGORY_NAME, 'Tools & Utilities']);
 
       const topLinks = Array.from(
-        el.querySelectorAll('[data-testid="category-group"]')[0].querySelectorAll('[data-testid="bookmark-link"]')
+        el
+          .querySelectorAll('[data-testid="category-group"]')[0]
+          .querySelectorAll('[data-testid="bookmark-link"]'),
       ).map((a) => a.getAttribute('href'));
       expect(topLinks).toEqual(['https://regex101.com']);
     });
@@ -505,7 +514,7 @@ describe('App (Static Bookmarks)', () => {
         CLICKS_STORAGE_KEY,
         JSON.stringify({
           'https://angular.dev': 5,
-        })
+        }),
       );
 
       const fixture = TestBed.createComponent(App);
@@ -550,19 +559,21 @@ describe('App (Static Bookmarks)', () => {
 
       const el = fixture.nativeElement as HTMLElement;
       expect(el.querySelector('[data-testid="category-heading"]')?.textContent?.trim()).toBe(
-        'Development & Docs'
+        'Development & Docs',
       );
 
       // Click on Regex101 link
       const links = el.querySelectorAll<HTMLAnchorElement>('[data-testid="bookmark-link"]');
-      const regexLink = Array.from(links).find((a) => a.getAttribute('href') === 'https://regex101.com')!;
+      const regexLink = Array.from(links).find(
+        (a) => a.getAttribute('href') === 'https://regex101.com',
+      )!;
       regexLink.click();
       fixture.detectChanges();
 
       // Top category should now appear
-      const headings = Array.from(
-        el.querySelectorAll('[data-testid="category-heading"]')
-      ).map((h) => h.textContent?.trim());
+      const headings = Array.from(el.querySelectorAll('[data-testid="category-heading"]')).map(
+        (h) => h.textContent?.trim(),
+      );
       expect(headings[0]).toBe(App.TOP_CATEGORY_NAME);
 
       // Verify localStorage was updated
@@ -597,7 +608,9 @@ describe('App (Static Bookmarks)', () => {
       expect(el.querySelector('[data-testid="settings-modal"]')).toBeTruthy();
 
       // Click close button inside modal
-      const closeBtn = el.querySelector<HTMLButtonElement>('[data-testid="close-settings-button"]')!;
+      const closeBtn = el.querySelector<HTMLButtonElement>(
+        '[data-testid="close-settings-button"]',
+      )!;
       closeBtn.click();
       fixture.detectChanges();
 
@@ -610,13 +623,13 @@ describe('App (Static Bookmarks)', () => {
         CLICKS_STORAGE_KEY,
         JSON.stringify({
           'https://angular.dev': 5,
-        })
+        }),
       );
       localStorage.setItem(
         SETTINGS_STORAGE_KEY,
         JSON.stringify({
           showTopUsedLinks: false,
-        })
+        }),
       );
 
       const fixture = TestBed.createComponent(App);
@@ -627,9 +640,9 @@ describe('App (Static Bookmarks)', () => {
       fixture.detectChanges();
 
       const el = fixture.nativeElement as HTMLElement;
-      const headings = Array.from(
-        el.querySelectorAll('[data-testid="category-heading"]')
-      ).map((h) => h.textContent?.trim());
+      const headings = Array.from(el.querySelectorAll('[data-testid="category-heading"]')).map(
+        (h) => h.textContent?.trim(),
+      );
 
       expect(headings).not.toContain(App.TOP_CATEGORY_NAME);
       expect(headings).toEqual(['Development & Docs', 'Tools & Utilities']);
@@ -640,7 +653,7 @@ describe('App (Static Bookmarks)', () => {
         CLICKS_STORAGE_KEY,
         JSON.stringify({
           'https://angular.dev': 5,
-        })
+        }),
       );
 
       const fixture = TestBed.createComponent(App);
@@ -652,27 +665,27 @@ describe('App (Static Bookmarks)', () => {
       fixture.detectChanges();
 
       const el = fixture.nativeElement as HTMLElement;
-      let headings = Array.from(
-        el.querySelectorAll('[data-testid="category-heading"]')
-      ).map((h) => h.textContent?.trim());
+      let headings = Array.from(el.querySelectorAll('[data-testid="category-heading"]')).map((h) =>
+        h.textContent?.trim(),
+      );
       expect(headings[0]).toBe(App.TOP_CATEGORY_NAME);
 
       // Disable top links
       app.settingsService.setShowTopUsedLinks(false);
       fixture.detectChanges();
 
-      headings = Array.from(
-        el.querySelectorAll('[data-testid="category-heading"]')
-      ).map((h) => h.textContent?.trim());
+      headings = Array.from(el.querySelectorAll('[data-testid="category-heading"]')).map((h) =>
+        h.textContent?.trim(),
+      );
       expect(headings).not.toContain(App.TOP_CATEGORY_NAME);
 
       // Re-enable top links
       app.settingsService.setShowTopUsedLinks(true);
       fixture.detectChanges();
 
-      headings = Array.from(
-        el.querySelectorAll('[data-testid="category-heading"]')
-      ).map((h) => h.textContent?.trim());
+      headings = Array.from(el.querySelectorAll('[data-testid="category-heading"]')).map((h) =>
+        h.textContent?.trim(),
+      );
       expect(headings[0]).toBe(App.TOP_CATEGORY_NAME);
     });
 
@@ -694,6 +707,98 @@ describe('App (Static Bookmarks)', () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
       fixture.detectChanges();
 
+      expect(app.selectedIndex()).toBe(-1);
+    });
+  });
+
+  describe('URL Search Query Synchronization', () => {
+    it('should initialize filterQuery from SearchUrlService.getInitialQuery() and filter bookmarks immediately', async () => {
+      const searchUrlService = TestBed.inject(SearchUrlService);
+      vi.spyOn(searchUrlService, 'getInitialQuery').mockReturnValue('regex');
+
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(app.filterQuery()).toBe('regex');
+      expect(app.filteredCategories().length).toBe(1);
+      expect(app.filteredCategories()[0].bookmarks.map((b) => b.name)).toEqual(['Regex101']);
+    });
+
+    it('should sync URL via SearchUrlService.updateQuery when onQueryChange is called', async () => {
+      const searchUrlService = TestBed.inject(SearchUrlService);
+      const updateQuerySpy = vi.spyOn(searchUrlService, 'updateQuery');
+
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+
+      app.onQueryChange('angular');
+      expect(updateQuerySpy).toHaveBeenCalledWith('angular');
+    });
+
+    it('should sync URL when clearFilter is called', async () => {
+      const searchUrlService = TestBed.inject(SearchUrlService);
+      const updateQuerySpy = vi.spyOn(searchUrlService, 'updateQuery');
+
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+
+      app.clearFilter();
+      expect(updateQuerySpy).toHaveBeenCalledWith('');
+    });
+
+    it('should sync URL when toggleTag is called', async () => {
+      const searchUrlService = TestBed.inject(SearchUrlService);
+      const updateQuerySpy = vi.spyOn(searchUrlService, 'updateQuery');
+
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+
+      app.toggleTag('frontend');
+      expect(updateQuerySpy).toHaveBeenCalledWith('frontend');
+
+      // Toggling the same tag again clears it
+      app.toggleTag('frontend');
+      expect(updateQuerySpy).toHaveBeenCalledWith('');
+    });
+
+    it('should update filterQuery when popstate callback is triggered', async () => {
+      let popstateCallback!: (query: string) => void;
+      const searchUrlService = TestBed.inject(SearchUrlService);
+      vi.spyOn(searchUrlService, 'listenPopState').mockImplementation((cb) => {
+        popstateCallback = cb;
+        return () => {};
+      });
+
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+
+      expect(popstateCallback).toBeDefined();
+
+      popstateCallback('typescript');
+      fixture.detectChanges();
+
+      expect(app.filterQuery()).toBe('typescript');
       expect(app.selectedIndex()).toBe(-1);
     });
   });
