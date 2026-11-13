@@ -78,6 +78,25 @@ test.describe('Static Bookmarks Application', () => {
     expect(item1Box).not.toBeNull();
     expect(item1Box!.y).toBeGreaterThan(item0Box!.y);
     expect(Math.abs(item0Box!.x - item1Box!.x)).toBeLessThan(5);
+
+    // Verify searchbar + settings button row (.top-bar-inner) has the exact same width and alignment as the one-column container
+    const topBarInner = page.locator('.top-bar-inner');
+    const container = page.locator('.container');
+    const topBarBox = await topBarInner.boundingBox();
+    const containerBox = await container.boundingBox();
+    expect(topBarBox).not.toBeNull();
+    expect(containerBox).not.toBeNull();
+    expect(Math.abs(topBarBox!.width - containerBox!.width)).toBeLessThan(1);
+    expect(Math.abs(topBarBox!.x - containerBox!.x)).toBeLessThan(1);
+
+    // Verify width and alignment also match on mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 });
+    const mobileTopBarBox = await topBarInner.boundingBox();
+    const mobileContainerBox = await container.boundingBox();
+    expect(mobileTopBarBox).not.toBeNull();
+    expect(mobileContainerBox).not.toBeNull();
+    expect(Math.abs(mobileTopBarBox!.width - mobileContainerBox!.width)).toBeLessThan(1);
+    expect(Math.abs(mobileTopBarBox!.x - mobileContainerBox!.x)).toBeLessThan(1);
   });
 
   test('allows direct click navigation on bookmark links and displays optional metadata with native browser tooltip', async ({

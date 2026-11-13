@@ -10,7 +10,7 @@
   background-color: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(8px);
   border-block-end: 1px solid var(--border);
-  padding: 1rem;
+  padding-block: 1rem;
 }
 
 .top-bar-inner {
