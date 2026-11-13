@@ -10,6 +10,7 @@ Features:
 - tags
 - categories
 - keyboard navigation
+- user settings (top links, configurable link target: new window/tab vs. same tab)
 
 ## Start
 

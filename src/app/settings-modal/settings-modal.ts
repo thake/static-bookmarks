@@ -57,6 +57,11 @@ export class SettingsModal {
     this.settingsService.setShowTopUsedLinks(input.checked);
   }
 
+  onToggleOpenNewTab(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.settingsService.setOpenInNewTab(input.checked);
+  }
+
   async copySearchUrl(): Promise<void> {
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {

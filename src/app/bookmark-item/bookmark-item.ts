@@ -31,6 +31,7 @@ export class BookmarkItem {
   readonly filterTokens = input<readonly string[]>([]);
   readonly activeTag = input<string>('');
   readonly isSelected = input<boolean>(false);
+  readonly openInNewTab = input<boolean>(true);
 
   readonly tagClick = output<string>();
   readonly bookmarkClick = output<Bookmark>();

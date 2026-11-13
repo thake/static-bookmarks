@@ -21,14 +21,12 @@ describe('SettingsService', () => {
   });
 
   it('should load initial settings from localStorage merged with defaults', () => {
-    localStorage.setItem(
-      SETTINGS_STORAGE_KEY,
-      JSON.stringify({ showTopUsedLinks: false })
-    );
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ showTopUsedLinks: false }));
 
     const freshService = new SettingsService();
-    expect(freshService.settings()).toEqual({ showTopUsedLinks: false });
+    expect(freshService.settings()).toEqual({ showTopUsedLinks: false, openInNewTab: true });
     expect(freshService.showTopUsedLinks()).toBe(false);
+    expect(freshService.openInNewTab()).toBe(true);
   });
 
   it('should fallback to defaults when stored JSON is invalid or corrupted', () => {
@@ -64,5 +62,34 @@ describe('SettingsService', () => {
 
     const stored = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || '{}');
     expect(stored).toEqual(DEFAULT_USER_SETTINGS);
+  });
+
+  describe('openInNewTab setting', () => {
+    it('should default openInNewTab to true', () => {
+      expect(DEFAULT_USER_SETTINGS.openInNewTab).toBe(true);
+      expect(service.openInNewTab()).toBe(true);
+    });
+
+    it('should update openInNewTab and persist to localStorage', () => {
+      service.setOpenInNewTab(false);
+      expect(service.openInNewTab()).toBe(false);
+
+      const stored = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || '{}');
+      expect(stored.openInNewTab).toBe(false);
+
+      service.setOpenInNewTab(true);
+      expect(service.openInNewTab()).toBe(true);
+
+      const updatedStored = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || '{}');
+      expect(updatedStored.openInNewTab).toBe(true);
+    });
+
+    it('should preserve openInNewTab default true when legacy localStorage data lacks the property', () => {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ showTopUsedLinks: false }));
+
+      const freshService = new SettingsService();
+      expect(freshService.showTopUsedLinks()).toBe(false);
+      expect(freshService.openInNewTab()).toBe(true);
+    });
   });
 });

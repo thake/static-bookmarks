@@ -613,7 +613,7 @@ test.describe('Static Bookmarks Application', () => {
     await expect(items.nth(3)).toHaveClass(/selected/);
   });
 
-  test('quick-opens first matching bookmark on Enter directly from filter input in current window', async ({
+  test('quick-opens first matching bookmark on Enter directly from filter input in new window by default', async ({
     page,
   }) => {
     await page.route('https://regex101.com/**', (route) =>
@@ -624,10 +624,12 @@ test.describe('Static Bookmarks Application', () => {
     const filterInput = page.getByTestId('filter-input');
     await filterInput.fill('regex');
 
-    // Press Enter to quick-open the first/only match
+    // Press Enter to quick-open the first/only match in new tab by default
+    const pagePromise = page.context().waitForEvent('page');
     await page.keyboard.press('Enter');
-    await page.waitForURL('https://regex101.com/**');
-    expect(page.url()).toContain('regex101.com');
+    const newPage = await pagePromise;
+    await newPage.waitForLoadState();
+    expect(newPage.url()).toContain('regex101.com');
   });
 
   test('dynamically shows "Häufig von dir genutzt" when bookmarks are clicked and updates localStorage', async ({
@@ -771,6 +773,53 @@ test.describe('Static Bookmarks Application', () => {
 
     // Top category should be back
     await expect(categories.first()).toHaveText('Häufig von dir genutzt');
+  });
+
+  test('manages openInNewTab link target setting, updates anchor attributes, and persists across reloads', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const links = page.getByTestId('bookmark-link');
+    await expect(links.first()).toHaveAttribute('target', '_blank');
+    await expect(links.first()).toHaveAttribute('rel', 'noopener noreferrer');
+
+    // Open settings modal
+    await page.getByTestId('settings-button').click();
+    const modal = page.getByTestId('settings-modal');
+    await expect(modal).toBeVisible();
+
+    const openInNewTabToggle = page.getByTestId('toggle-open-new-tab');
+    await expect(openInNewTabToggle).toBeChecked();
+
+    // Toggle off
+    await openInNewTabToggle.click();
+    await expect(openInNewTabToggle).not.toBeChecked();
+
+    // Close modal
+    await page.getByTestId('close-settings-button').click();
+    await expect(modal).not.toBeVisible();
+
+    // Bookmark links should now open in same tab (no target attribute)
+    await expect(links.first()).not.toHaveAttribute('target', '_blank');
+
+    // Verify localStorage persistence
+    const storedSettings = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('sb_user_settings') || '{}'),
+    );
+    expect(storedSettings.openInNewTab).toBe(false);
+
+    // Reload page to verify persistence across reload
+    await page.reload();
+    await expect(links.first()).not.toHaveAttribute('target', '_blank');
+
+    // Re-enable setting
+    await page.getByTestId('settings-button').click();
+    await expect(page.getByTestId('toggle-open-new-tab')).not.toBeChecked();
+    await page.getByTestId('toggle-open-new-tab').click();
+    await page.keyboard.press('Escape');
+
+    await expect(links.first()).toHaveAttribute('target', '_blank');
   });
 
   test.describe('Browser Search Shortcuts & Omnibox Integration', () => {

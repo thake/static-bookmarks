@@ -70,6 +70,30 @@ describe('SettingsModal', () => {
     expect(settingsService.showTopUsedLinks()).toBe(true);
   });
 
+  it('should render toggle-open-new-tab checked by default and update SettingsService when clicked', () => {
+    component.isOpen.set(true);
+    fixture.detectChanges();
+
+    const toggle = fixture.nativeElement.querySelector(
+      '[data-testid="toggle-open-new-tab"]',
+    ) as HTMLInputElement;
+    expect(toggle).not.toBeNull();
+    expect(toggle.checked).toBe(true);
+    expect(settingsService.openInNewTab()).toBe(true);
+
+    toggle.checked = false;
+    toggle.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(settingsService.openInNewTab()).toBe(false);
+
+    toggle.checked = true;
+    toggle.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(settingsService.openInNewTab()).toBe(true);
+  });
+
   it('should close when clicking close button', () => {
     component.isOpen.set(true);
     fixture.detectChanges();

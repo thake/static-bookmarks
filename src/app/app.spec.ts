@@ -54,6 +54,7 @@ describe('App (Static Bookmarks)', () => {
     httpMock.verify();
     localStorage.clear();
     window.history.replaceState(null, '', '/');
+    vi.restoreAllMocks();
   });
 
   function flushBookmarks(
@@ -390,6 +391,75 @@ describe('App (Static Bookmarks)', () => {
     // Filter change resets selectedIndex
     app.onQueryChange('angular');
     expect(app.selectedIndex()).toBe(-1);
+  });
+
+  describe('openBookmark and Link Target Setting', () => {
+    it('should render bookmark links with target="_blank" and rel="noopener noreferrer" when openInNewTab is true (default)', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const links = el.querySelectorAll<HTMLAnchorElement>('[data-testid="bookmark-link"]');
+      expect(links.length).toBeGreaterThan(0);
+      expect(links[0].getAttribute('target')).toBe('_blank');
+      expect(links[0].getAttribute('rel')).toBe('noopener noreferrer');
+    });
+
+    it('should reactively remove target and rel from bookmark links when openInNewTab is toggled off', async () => {
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const links = el.querySelectorAll<HTMLAnchorElement>('[data-testid="bookmark-link"]');
+      expect(links[0].getAttribute('target')).toBe('_blank');
+
+      app.settingsService.setOpenInNewTab(false);
+      fixture.detectChanges();
+
+      expect(links[0].getAttribute('target')).toBeNull();
+      expect(links[0].getAttribute('rel')).toBeNull();
+    });
+
+    it('should open in new window via window.open when openBookmark is called with openInNewTab true', () => {
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+      expect(app.settingsService.openInNewTab()).toBe(true);
+
+      app.openBookmark('https://angular.dev');
+      expect(windowOpenSpy).toHaveBeenCalledWith('https://angular.dev', '_blank');
+    });
+
+    it('should open in same window when openBookmark is called with openInNewTab false', () => {
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      app.settingsService.setOpenInNewTab(false);
+
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      app.openBookmark('https://angular.dev');
+      expect(windowOpenSpy).not.toHaveBeenCalled();
+    });
+
+    it('should override openInNewTab setting and open in new window when explicit newTab is true', () => {
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      app.settingsService.setOpenInNewTab(false);
+
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+      app.openBookmark('https://angular.dev', true);
+      expect(windowOpenSpy).toHaveBeenCalledWith('https://angular.dev', '_blank');
+    });
   });
 
   describe('Häufig von dir genutzt (Top Clicks category)', () => {

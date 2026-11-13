@@ -212,13 +212,15 @@ export class App {
     const idx = this.selectedIndex();
     const target = idx >= 0 && idx < list.length ? list[idx] : list[0];
     if (target) {
-      this.openBookmark(target.url, options?.newTab);
+      const isExplicitNewTab = options?.newTab === true;
+      this.openBookmark(target.url, isExplicitNewTab ? true : undefined);
     }
   }
 
-  openBookmark(url: string, newTab = false): void {
+  openBookmark(url: string, newTab?: boolean): void {
     this.clickTracker.recordClick(url);
-    if (newTab) {
+    const shouldOpenNewTab = newTab !== undefined ? newTab : this.settingsService.openInNewTab();
+    if (shouldOpenNewTab) {
       window.open(url, '_blank');
     } else {
       window.location.href = url;

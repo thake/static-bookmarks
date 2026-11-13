@@ -82,6 +82,7 @@
                 [filterTokens]="filterTokens()"
                 [activeTag]="filterQuery()"
                 [isSelected]="isItemSelected(group.category, bookmark.url)"
+                [openInNewTab]="settingsService.openInNewTab()"
                 (tagClick)="toggleTag($event)"
                 (bookmarkClick)="onBookmarkClicked($event)"
               ></li>

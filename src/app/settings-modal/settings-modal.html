@@ -53,6 +53,27 @@
               <span class="switch-slider" aria-hidden="true"></span>
             </div>
           </label>
+
+          <label class="setting-item" for="toggle-open-new-tab">
+            <div class="setting-text">
+              <span class="setting-label">In neuem Tab / Fenster öffnen</span>
+              <span class="setting-description">
+                Lesezeichen standardmäßig in einem neuen Browser-Tab oder -Fenster öffnen.
+              </span>
+            </div>
+            <div class="switch-container">
+              <input
+                id="toggle-open-new-tab"
+                type="checkbox"
+                role="switch"
+                class="switch-input"
+                data-testid="toggle-open-new-tab"
+                [checked]="settingsService.openInNewTab()"
+                (change)="onToggleOpenNewTab($event)"
+              />
+              <span class="switch-slider" aria-hidden="true"></span>
+            </div>
+          </label>
         </div>
 
         <div class="settings-divider" aria-hidden="true"></div>

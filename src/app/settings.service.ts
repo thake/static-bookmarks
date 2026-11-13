@@ -10,6 +10,7 @@ export class SettingsService {
   readonly settings = signal<UserSettings>(this.loadInitialSettings());
 
   readonly showTopUsedLinks = computed(() => this.settings().showTopUsedLinks);
+  readonly openInNewTab = computed(() => this.settings().openInNewTab);
 
   private loadInitialSettings(): UserSettings {
     try {
@@ -44,6 +45,10 @@ export class SettingsService {
 
   setShowTopUsedLinks(show: boolean): void {
     this.updateSettings({ showTopUsedLinks: show });
+  }
+
+  setOpenInNewTab(openInNewTab: boolean): void {
+    this.updateSettings({ openInNewTab });
   }
 
   resetToDefaults(): void {

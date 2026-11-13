@@ -26,8 +26,37 @@ describe('BookmarkItem', () => {
     const link = el.querySelector<HTMLAnchorElement>('[data-testid="bookmark-link"]')!;
     expect(link.getAttribute('href')).toBe('https://sub.example.com/path');
     expect(link.getAttribute('title')).toBe('A helpful description');
-    expect(el.querySelector('[data-testid="bookmark-name"]')?.textContent?.trim()).toBe('Test Bookmark');
+    expect(el.querySelector('[data-testid="bookmark-name"]')?.textContent?.trim()).toBe(
+      'Test Bookmark',
+    );
     expect(el.querySelector('.bookmark-host')?.textContent?.trim()).toBe('sub.example.com');
+  });
+
+  it('should set target="_blank" and rel="noopener noreferrer" when openInNewTab is true (default)', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'New Tab Bookmark',
+      url: 'https://example.com/new-tab',
+    });
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const link = el.querySelector<HTMLAnchorElement>('[data-testid="bookmark-link"]')!;
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('should not set target or rel when openInNewTab is false', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Same Tab Bookmark',
+      url: 'https://example.com/same-tab',
+    });
+    fixture.componentRef.setInput('openInNewTab', false);
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const link = el.querySelector<HTMLAnchorElement>('[data-testid="bookmark-link"]')!;
+    expect(link.getAttribute('target')).toBeNull();
+    expect(link.getAttribute('rel')).toBeNull();
   });
 
   it('should hide tags initially with +N button and expand when toggled', () => {
@@ -61,8 +90,8 @@ describe('BookmarkItem', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    const tagElements = Array.from(el.querySelectorAll('[data-testid="bookmark-tag"]')).map(
-      (t) => t.textContent?.trim()
+    const tagElements = Array.from(el.querySelectorAll('[data-testid="bookmark-tag"]')).map((t) =>
+      t.textContent?.trim(),
     );
     // 'frontend' and 'backend' contain 'end'
     expect(tagElements).toEqual(['frontend', 'backend']);
@@ -102,9 +131,9 @@ describe('BookmarkItem', () => {
 
     const el = fixture.nativeElement as HTMLElement;
     const tags = el.querySelectorAll<HTMLButtonElement>('[data-testid="bookmark-tag"]');
-    expect(tags[0].getAttribute('aria-label')).toBe("Nach Tag angular filtern");
+    expect(tags[0].getAttribute('aria-label')).toBe('Nach Tag angular filtern');
     expect(tags[0].getAttribute('aria-pressed')).toBe('true');
-    expect(tags[1].getAttribute('aria-label')).toBe("Nach Tag signals filtern");
+    expect(tags[1].getAttribute('aria-label')).toBe('Nach Tag signals filtern');
     expect(tags[1].getAttribute('aria-pressed')).toBe('false');
 
     const toggleBtn = el.querySelector<HTMLButtonElement>('[data-testid="expand-tags-button"]')!;
