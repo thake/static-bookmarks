@@ -93,6 +93,25 @@ describe('FilterBar', () => {
     expect(component.query()).toBe('');
   });
 
+  it('should ignore global / and Escape shortcuts when disabled is true', () => {
+    component.query.set('keep-me');
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector(
+      '[data-testid="filter-input"]',
+    ) as HTMLInputElement;
+    input.blur();
+    const focusSpy = vi.spyOn(input, 'focus');
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '/' }));
+    fixture.detectChanges();
+
+    expect(component.query()).toBe('keep-me');
+    expect(focusSpy).not.toHaveBeenCalled();
+  });
+
   it('should emit navigateDown, navigateUp, and selectCurrent on arrow and enter keys', () => {
     const el = fixture.nativeElement as HTMLElement;
     const input = el.querySelector<HTMLInputElement>('[data-testid="filter-input"]')!;

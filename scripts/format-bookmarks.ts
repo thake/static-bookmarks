@@ -25,7 +25,11 @@ export function createBookmarkFormatter(options: FormatOptions = {}): Formatter 
 
 export function formatBookmarksData(data: unknown, options: FormatOptions = {}): string {
   const formatter = createBookmarkFormatter(options);
-  return formatter.Serialize(data);
+  const serialized = formatter.Serialize(data);
+  if (serialized === undefined) {
+    throw new Error('Failed to serialize bookmarks data');
+  }
+  return serialized;
 }
 
 export async function formatBookmarksFile(
@@ -64,7 +68,7 @@ async function runCli(): Promise<void> {
       const isFormatted = await checkBookmarksFile(targetFile);
       if (!isFormatted) {
         console.error(
-          `File ${targetFile} is not properly formatted. Run 'npm run format:bookmarks' to fix.`,
+          `File ${targetFile} is not properly formatted. Run 'npm run bookmarks:format' to fix.`,
         );
         process.exitCode = 1;
         return;

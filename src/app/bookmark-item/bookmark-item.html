@@ -31,17 +31,17 @@
 </a>
 @if (bookmark().tags?.length) {
   <div class="bookmark-tags" data-testid="bookmark-tags">
-    @for (tag of displayedTags(); track $index) {
+    @for (item of displayedTagItems(); track item.trackKey) {
       <button
         type="button"
         class="tag-pill"
-        [class.active]="activeTag().trim().toLowerCase() === tag.trim().toLowerCase()"
-        [attr.aria-pressed]="activeTag().trim().toLowerCase() === tag.trim().toLowerCase()"
-        [attr.aria-label]="'Nach Tag ' + tag + ' filtern'"
+        [class.active]="activeTag().trim().toLowerCase() === item.tag.trim().toLowerCase()"
+        [attr.aria-pressed]="activeTag().trim().toLowerCase() === item.tag.trim().toLowerCase()"
+        [attr.aria-label]="'Nach Tag ' + item.tag + ' filtern'"
         data-testid="bookmark-tag"
-        (click)="onTagClick(tag)"
+        (click)="onTagClick(item.tag)"
       >
-        {{ tag }}
+        {{ item.tag }}
       </button>
     }
     @if (hiddenCount() > 0 || isExpanded()) {

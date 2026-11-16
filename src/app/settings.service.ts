@@ -1,4 +1,5 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { DEFAULT_USER_SETTINGS, UserSettings } from './settings.model';
 
 export const SETTINGS_STORAGE_KEY = 'sb_user_settings';
@@ -7,23 +8,37 @@ export const SETTINGS_STORAGE_KEY = 'sb_user_settings';
   providedIn: 'root',
 })
 export class SettingsService {
+  private readonly document = inject(DOCUMENT);
   readonly settings = signal<UserSettings>(this.loadInitialSettings());
 
   readonly showTopUsedLinks = computed(() => this.settings().showTopUsedLinks);
   readonly openInNewTab = computed(() => this.settings().openInNewTab);
 
+  private get storage(): Storage | null {
+    try {
+      return this.document.defaultView?.localStorage ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   private loadInitialSettings(): UserSettings {
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-            return {
-              ...DEFAULT_USER_SETTINGS,
-              ...parsed,
-            };
-          }
+      const raw = this.storage?.getItem(SETTINGS_STORAGE_KEY);
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          const record = parsed as Record<string, unknown>;
+          return {
+            showTopUsedLinks:
+              typeof record['showTopUsedLinks'] === 'boolean'
+                ? record['showTopUsedLinks']
+                : DEFAULT_USER_SETTINGS.showTopUsedLinks,
+            openInNewTab:
+              typeof record['openInNewTab'] === 'boolean'
+                ? record['openInNewTab']
+                : DEFAULT_USER_SETTINGS.openInNewTab,
+          };
         }
       }
     } catch {
@@ -59,9 +74,7 @@ export class SettingsService {
 
   private persistSettings(settings: UserSettings): void {
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-      }
+      this.storage?.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
     } catch {
       // Storage quota exceeded or disabled
     }

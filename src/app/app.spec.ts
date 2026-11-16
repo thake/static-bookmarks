@@ -800,9 +800,12 @@ describe('App (Static Bookmarks)', () => {
       await fixture.whenStable();
       fixture.detectChanges();
 
+      const el = fixture.nativeElement as HTMLElement;
       app.openSettings();
       fixture.detectChanges();
 
+      expect(el.querySelector('header.top-bar')?.hasAttribute('inert')).toBe(true);
+      expect(el.querySelector('main.container')?.hasAttribute('inert')).toBe(true);
       expect(app.selectedIndex()).toBe(-1);
 
       // Press ArrowDown while settings modal is open
@@ -810,6 +813,92 @@ describe('App (Static Bookmarks)', () => {
       fixture.detectChanges();
 
       expect(app.selectedIndex()).toBe(-1);
+    });
+
+    it('should preserve active filterQuery when pressing Escape to close settings modal', async () => {
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      app.onQueryChange('angular');
+      fixture.detectChanges();
+      expect(app.filterQuery()).toBe('angular');
+
+      app.openSettings();
+      fixture.detectChanges();
+      expect(app.isSettingsOpen()).toBe(true);
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+      fixture.detectChanges();
+
+      expect(app.isSettingsOpen()).toBe(false);
+      expect(app.filterQuery()).toBe('angular');
+    });
+
+    it('should not hijack Enter when focus is on a button or link while selectedIndex >= 0', async () => {
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+
+      flushBookmarks();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      app.selectedIndex.set(0);
+      fixture.detectChanges();
+
+      const selectSpy = vi.spyOn(app, 'onSelectCurrent');
+      const el = fixture.nativeElement as HTMLElement;
+      const settingsBtn = el.querySelector<HTMLButtonElement>('[data-testid="settings-button"]')!;
+
+      const enterOnButton = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true,
+        cancelable: true,
+      });
+      settingsBtn.dispatchEvent(enterOnButton);
+
+      expect(enterOnButton.defaultPrevented).toBe(false);
+      expect(selectSpy).not.toHaveBeenCalled();
+    });
+
+    it('should render bookmarks with fallback icons when favicons.json fails, and render error state when bookmarks.json fails', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+
+      const req = httpMock.expectOne('./bookmarks.json');
+      req.flush(MOCK_BOOKMARKS);
+      const favReq = httpMock.expectOne('./favicons.json');
+      favReq.flush('Not Found', { status: 404, statusText: 'Not Found' });
+
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelectorAll('[data-testid="bookmark-item"]').length).toBe(4);
+      expect(el.querySelectorAll('[data-testid="bookmark-favicon-fallback"]').length).toBe(4);
+
+      // Separate fixture testing bookmarks.json HTTP error
+      const errorFixture = TestBed.createComponent(App);
+      errorFixture.detectChanges();
+
+      httpMock
+        .expectOne('./bookmarks.json')
+        .flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
+      httpMock.expectOne('./favicons.json').flush({});
+
+      await errorFixture.whenStable();
+      errorFixture.detectChanges();
+
+      const errorEl = errorFixture.nativeElement as HTMLElement;
+      expect(errorEl.querySelector('[data-testid="error-state"]')).toBeTruthy();
+      expect(() =>
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' })),
+      ).not.toThrow();
     });
   });
 

@@ -6,6 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import {
   Bookmark,
@@ -33,6 +34,7 @@ import { SearchUrlService } from './search-url.service';
 export class App {
   static readonly TOP_CATEGORY_NAME = 'Häufig von dir genutzt';
 
+  private readonly document = inject(DOCUMENT);
   private readonly clickTracker = inject(ClickTrackingService);
   readonly settingsService = inject(SettingsService);
   private readonly searchUrlService = inject(SearchUrlService);
@@ -41,7 +43,7 @@ export class App {
   readonly isSettingsOpen = signal(false);
 
   readonly bookmarksResource = httpResource<BookmarksMap>(() => './bookmarks.json');
-  readonly faviconsResource = httpResource<Record<string, string>>(() => './favicons.json');
+  readonly faviconsResource = httpResource<Record<string, string | null>>(() => './favicons.json');
 
   readonly filterQuery = signal(this.searchUrlService.getInitialQuery());
   readonly selectedIndex = signal<number>(-1);
@@ -54,7 +56,9 @@ export class App {
     this.destroyRef.onDestroy(unlisten);
   }
 
-  readonly faviconsMap = computed(() => this.faviconsResource.value() ?? {});
+  readonly faviconsMap = computed<Record<string, string | null>>(() =>
+    this.faviconsResource.hasValue() ? this.faviconsResource.value() : {},
+  );
 
   readonly filterTokens = computed(() => {
     const raw = this.filterQuery().trim().toLowerCase();
@@ -62,6 +66,9 @@ export class App {
   });
 
   private readonly rawCategories = computed<BookmarkCategoryGroup[]>(() => {
+    if (!this.bookmarksResource.hasValue()) {
+      return [];
+    }
     const data = this.bookmarksResource.value();
     if (!data) {
       return [];
@@ -219,11 +226,15 @@ export class App {
 
   openBookmark(url: string, newTab?: boolean): void {
     this.clickTracker.recordClick(url);
+    const win = this.document.defaultView;
+    if (!win) {
+      return;
+    }
     const shouldOpenNewTab = newTab !== undefined ? newTab : this.settingsService.openInNewTab();
     if (shouldOpenNewTab) {
-      window.open(url, '_blank');
+      win.open(url, '_blank');
     } else {
-      window.location.href = url;
+      win.location.href = url;
     }
   }
 
@@ -267,6 +278,8 @@ export class App {
       return;
     }
 
+    const isInteractive = Boolean(target?.closest?.('a, button, select, [role="button"]'));
+
     if (event.key === 'ArrowDown') {
       event.preventDefault();
       this.onNavigateDown();
@@ -279,7 +292,7 @@ export class App {
     } else if (event.key === 'End') {
       event.preventDefault();
       this.onNavigateEnd();
-    } else if (event.key === 'Enter' && this.selectedIndex() >= 0) {
+    } else if (event.key === 'Enter' && this.selectedIndex() >= 0 && !isInteractive) {
       event.preventDefault();
       this.onSelectCurrent({ newTab: event.ctrlKey || event.metaKey });
     } else if (event.key === 'Escape' && this.selectedIndex() >= 0) {

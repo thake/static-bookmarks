@@ -194,8 +194,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     else if (arg === '--verbose') opts.verbose = true;
     else if (arg === '--quiet') opts.quiet = true;
   }
-  if (process.env.LINK_CHECK_AUTH_HEADERS) {
-    try { opts.authTokensByHost = JSON.parse(process.env.LINK_CHECK_AUTH_HEADERS); } catch { /* ignore */ }
+  const envAuthHeaders = process.env['LINK_CHECK_AUTH_HEADERS'];
+  if (envAuthHeaders) {
+    try { opts.authTokensByHost = JSON.parse(envAuthHeaders); } catch { /* ignore */ }
   }
   run(opts).then((s) => process.exit(s.passed ? 0 : 1)).catch((err: unknown) => {
     console.error('[dead-links] Fataler Fehler:', err);

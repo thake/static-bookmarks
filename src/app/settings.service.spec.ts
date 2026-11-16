@@ -23,17 +23,24 @@ describe('SettingsService', () => {
   it('should load initial settings from localStorage merged with defaults', () => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ showTopUsedLinks: false }));
 
-    const freshService = new SettingsService();
+    const freshService = TestBed.runInInjectionContext(() => new SettingsService());
     expect(freshService.settings()).toEqual({ showTopUsedLinks: false, openInNewTab: true });
     expect(freshService.showTopUsedLinks()).toBe(false);
     expect(freshService.openInNewTab()).toBe(true);
   });
 
-  it('should fallback to defaults when stored JSON is invalid or corrupted', () => {
+  it('should fallback to defaults when stored JSON is invalid, non-boolean, or contains unknown keys', () => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, 'not-valid-json');
 
-    const freshService = new SettingsService();
-    expect(freshService.settings()).toEqual(DEFAULT_USER_SETTINGS);
+    const corruptedService = TestBed.runInInjectionContext(() => new SettingsService());
+    expect(corruptedService.settings()).toEqual(DEFAULT_USER_SETTINGS);
+
+    localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({ showTopUsedLinks: 'false', openInNewTab: 0, extraKey: 'ignored' }),
+    );
+    const malformedService = TestBed.runInInjectionContext(() => new SettingsService());
+    expect(malformedService.settings()).toEqual(DEFAULT_USER_SETTINGS);
   });
 
   it('should update settings and persist to localStorage', () => {
@@ -87,7 +94,7 @@ describe('SettingsService', () => {
     it('should preserve openInNewTab default true when legacy localStorage data lacks the property', () => {
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ showTopUsedLinks: false }));
 
-      const freshService = new SettingsService();
+      const freshService = TestBed.runInInjectionContext(() => new SettingsService());
       expect(freshService.showTopUsedLinks()).toBe(false);
       expect(freshService.openInNewTab()).toBe(true);
     });

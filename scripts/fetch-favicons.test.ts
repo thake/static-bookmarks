@@ -9,6 +9,8 @@ import {
   detectExtension,
   extractIconHrefFromHtml,
   extractIconHrefsFromHtml,
+  getRegistrableRootDomain,
+  run,
 } from './fetch-favicons.ts';
 
 describe('Favicons Cleanup & Pruning', () => {
@@ -22,7 +24,7 @@ describe('Favicons Cleanup & Pruning', () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  test('should delete orphan favicon files that are not referenced in the manifest', async () => {
+  test('should delete orphan favicon files that are not referenced in the manifest (ignoring null entries)', async () => {
     // Create active files and orphan files
     await fs.writeFile(path.join(tempDir, 'active1.png'), 'active-icon-1');
     await fs.writeFile(path.join(tempDir, 'active2.svg'), 'active-icon-2');
@@ -32,6 +34,7 @@ describe('Favicons Cleanup & Pruning', () => {
     const manifest = {
       'https://site1.org': 'favicons/active1.png',
       'https://site2.org': 'favicons/active2.svg',
+      'https://missing.org': null,
     };
 
     const deleted = await pruneOrphanFavicons(tempDir, manifest);
@@ -55,6 +58,55 @@ describe('Favicons Cleanup & Pruning', () => {
 
     const remaining = await fs.readdir(tempDir);
     assert.deepEqual(remaining, ['shared.png']);
+  });
+
+  test('should preserve cached null entries in manifest without making network requests', async () => {
+    const bookmarksPath = path.join(tempDir, 'bookmarks.json');
+    const faviconsDir = path.join(tempDir, 'favicons');
+    const manifestPath = path.join(tempDir, 'favicons.json');
+    await fs.mkdir(faviconsDir, { recursive: true });
+
+    await fs.writeFile(
+      bookmarksPath,
+      JSON.stringify({ Cat: [{ url: 'https://cached-missing.invalid' }] }),
+    );
+    await fs.writeFile(manifestPath, JSON.stringify({ 'https://cached-missing.invalid': null }));
+
+    const originalFetch = globalThis.fetch;
+    let fetchCalls = 0;
+    globalThis.fetch = (async () => {
+      fetchCalls++;
+      throw new Error('Should not call fetch for cached null entry');
+    }) as typeof fetch;
+
+    try {
+      const res = await run({
+        bookmarksFile: bookmarksPath,
+        faviconsDir,
+        manifestFile: manifestPath,
+      });
+      assert.equal(fetchCalls, 0);
+      assert.deepEqual(res.manifest, { 'https://cached-missing.invalid': null });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test('should extract registrable root domain while skipping multi-tenant suffixes and ccTLD SLDs', () => {
+    assert.equal(getRegistrableRootDomain('dev.mysql.com'), 'mysql.com');
+    assert.equal(getRegistrableRootDomain('a.b.example.org'), 'example.org');
+    assert.equal(getRegistrableRootDomain('mysql.com'), null);
+    assert.equal(getRegistrableRootDomain('localhost'), null);
+    assert.equal(getRegistrableRootDomain('127.0.0.1'), null);
+
+    // Multi-tenant hosting suffixes should NOT collapse to github.io / readthedocs.io
+    assert.equal(getRegistrableRootDomain('gchq.github.io'), null);
+    assert.equal(getRegistrableRootDomain('argo-cd.readthedocs.io'), null);
+    assert.equal(getRegistrableRootDomain('sub.gchq.github.io'), 'gchq.github.io');
+
+    // Country-code second-level domains
+    assert.equal(getRegistrableRootDomain('bbc.co.uk'), null);
+    assert.equal(getRegistrableRootDomain('news.bbc.co.uk'), 'bbc.co.uk');
   });
 
   test('should correctly detect image extension and compute content hash', () => {

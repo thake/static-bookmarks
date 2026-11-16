@@ -134,6 +134,51 @@ describe('SettingsModal', () => {
     expect(component.isOpen()).toBe(false);
   });
 
+  it('should move focus into modal on open, trap Tab/Shift+Tab within modal, and restore focus on close', () => {
+    const triggerBtn = document.createElement('button');
+    document.body.appendChild(triggerBtn);
+    triggerBtn.focus();
+    expect(document.activeElement).toBe(triggerBtn);
+
+    try {
+      component.isOpen.set(true);
+      fixture.detectChanges();
+
+      const closeBtn = fixture.nativeElement.querySelector(
+        '[data-testid="close-settings-button"]',
+      ) as HTMLButtonElement;
+      const copyBtn = fixture.nativeElement.querySelector(
+        '[data-testid="copy-search-url-button"]',
+      ) as HTMLButtonElement;
+
+      // Focus automatically moved to close button
+      expect(document.activeElement).toBe(closeBtn);
+
+      // Shift+Tab from first focusable wraps to last focusable (copy button)
+      const shiftTabEvent = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey: true,
+        cancelable: true,
+      });
+      window.dispatchEvent(shiftTabEvent);
+      expect(shiftTabEvent.defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(copyBtn);
+
+      // Tab from last focusable wraps back to first focusable (close button)
+      const tabEvent = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+      window.dispatchEvent(tabEvent);
+      expect(tabEvent.defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(closeBtn);
+
+      // Closing restores focus to trigger button
+      component.close();
+      fixture.detectChanges();
+      expect(document.activeElement).toBe(triggerBtn);
+    } finally {
+      triggerBtn.remove();
+    }
+  });
+
   describe('Browser Search Shortcut Section', () => {
     it('should display browser search section and search URL template', () => {
       component.isOpen.set(true);

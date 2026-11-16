@@ -1,9 +1,10 @@
-<header class="top-bar">
+<header class="top-bar" [attr.inert]="isSettingsOpen() ? '' : null">
   <div class="top-bar-inner">
     <div class="top-bar-filter">
       <app-filter-bar
         [query]="filterQuery()"
         [hasSelection]="selectedIndex() >= 0"
+        [disabled]="isSettingsOpen()"
         (queryChange)="onQueryChange($event)"
         (navigateDown)="onNavigateDown()"
         (navigateUp)="onNavigateUp()"
@@ -45,7 +46,7 @@
   (closed)="closeSettings()"
 />
 
-<main class="container">
+<main class="container" [attr.inert]="isSettingsOpen() ? '' : null">
   @if (bookmarksResource.isLoading()) {
     <p class="status-message" data-testid="loading-state" role="status">Lesezeichen werden geladen…</p>
   } @else if (bookmarksResource.error()) {
@@ -81,7 +82,7 @@
                 [faviconSrc]="faviconsMap()[bookmark.url] || null"
                 [filterTokens]="filterTokens()"
                 [activeTag]="filterQuery()"
-                [isSelected]="isItemSelected(group.category, bookmark.url)"
+                [isSelected]="selectedItemKey() === group.category + '::' + bookmark.url"
                 [openInNewTab]="settingsService.openInNewTab()"
                 (tagClick)="toggleTag($event)"
                 (bookmarkClick)="onBookmarkClicked($event)"

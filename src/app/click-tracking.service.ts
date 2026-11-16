@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 
 export const CLICKS_STORAGE_KEY = 'sb_bookmark_clicks';
 
@@ -6,17 +7,30 @@ export const CLICKS_STORAGE_KEY = 'sb_bookmark_clicks';
   providedIn: 'root',
 })
 export class ClickTrackingService {
+  private readonly document = inject(DOCUMENT);
   readonly clickCounts = signal<Record<string, number>>(this.loadInitialCounts());
+
+  private get storage(): Storage | null {
+    try {
+      return this.document.defaultView?.localStorage ?? null;
+    } catch {
+      return null;
+    }
+  }
 
   private loadInitialCounts(): Record<string, number> {
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const raw = window.localStorage.getItem(CLICKS_STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-            return parsed;
+      const raw = this.storage?.getItem(CLICKS_STORAGE_KEY);
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          const validated: Record<string, number> = {};
+          for (const [url, count] of Object.entries(parsed as Record<string, unknown>)) {
+            if (url && typeof count === 'number' && Number.isFinite(count) && count > 0) {
+              validated[url] = Math.floor(count);
+            }
           }
+          return validated;
         }
       }
     } catch {
@@ -46,9 +60,7 @@ export class ClickTrackingService {
   clearClicks(): void {
     this.clickCounts.set({});
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.removeItem(CLICKS_STORAGE_KEY);
-      }
+      this.storage?.removeItem(CLICKS_STORAGE_KEY);
     } catch {
       // Storage access blocked
     }
@@ -56,9 +68,7 @@ export class ClickTrackingService {
 
   private persistCounts(counts: Record<string, number>): void {
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem(CLICKS_STORAGE_KEY, JSON.stringify(counts));
-      }
+      this.storage?.setItem(CLICKS_STORAGE_KEY, JSON.stringify(counts));
     } catch {
       // Storage quota exceeded or disabled
     }

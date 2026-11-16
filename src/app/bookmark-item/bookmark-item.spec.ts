@@ -232,4 +232,49 @@ describe('BookmarkItem', () => {
 
     expect(clickedBookmark).toBeNull();
   });
+
+  it('should reset faviconFailed when faviconSrc input changes after an image error', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Favicon Reset',
+      url: 'https://example.com/reset',
+    });
+    fixture.componentRef.setInput('faviconSrc', 'favicons/broken.png');
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    el.querySelector('[data-testid="bookmark-favicon"]')!.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="bookmark-favicon"]')).toBeNull();
+
+    fixture.componentRef.setInput('faviconSrc', 'favicons/working.png');
+    fixture.detectChanges();
+
+    const updatedImg = el.querySelector<HTMLImageElement>('[data-testid="bookmark-favicon"]');
+    expect(updatedImg).not.toBeNull();
+    expect(updatedImg?.getAttribute('src')).toBe('favicons/working.png');
+  });
+
+  it('should preserve matching tag DOM nodes when expanding all tags and not set aria-selected on listitem', () => {
+    fixture.componentRef.setInput('bookmark', {
+      name: 'Tag Tracking',
+      url: 'https://example.com/tags',
+      tags: ['alpha', 'beta', 'gamma'],
+    });
+    fixture.componentRef.setInput('filterTokens', ['beta']);
+    fixture.componentRef.setInput('isSelected', true);
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.hasAttribute('aria-selected')).toBe(false);
+
+    const betaBtnBefore = el.querySelector('[data-testid="bookmark-tag"]')!;
+    expect(betaBtnBefore.textContent?.trim()).toBe('beta');
+
+    el.querySelector<HTMLButtonElement>('[data-testid="expand-tags-button"]')!.click();
+    fixture.detectChanges();
+
+    const allBtns = Array.from(el.querySelectorAll('[data-testid="bookmark-tag"]'));
+    expect(allBtns.length).toBe(3);
+    expect(allBtns[1]).toBe(betaBtnBefore);
+  });
 });

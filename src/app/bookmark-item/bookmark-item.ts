@@ -6,10 +6,16 @@ import {
   ElementRef,
   inject,
   input,
+  linkedSignal,
   output,
   signal,
 } from '@angular/core';
 import { Bookmark } from '../bookmark.model';
+
+export interface DisplayedTagItem {
+  readonly tag: string;
+  readonly trackKey: string;
+}
 
 @Component({
   selector: 'li[app-bookmark-item]',
@@ -20,7 +26,6 @@ import { Bookmark } from '../bookmark.model';
     class: 'bookmark-item',
     'data-testid': 'bookmark-item',
     '[class.selected]': 'isSelected()',
-    '[attr.aria-selected]': 'isSelected()',
   },
 })
 export class BookmarkItem {
@@ -37,7 +42,10 @@ export class BookmarkItem {
   readonly bookmarkClick = output<Bookmark>();
 
   readonly isExpanded = signal(false);
-  readonly faviconFailed = signal(false);
+  readonly faviconFailed = linkedSignal(() => {
+    this.faviconSrc();
+    return false;
+  });
 
   constructor() {
     effect(() => {
@@ -76,6 +84,18 @@ export class BookmarkItem {
       return [];
     }
     return this.isExpanded() ? tags : this.matchingTags();
+  });
+
+  readonly displayedTagItems = computed<DisplayedTagItem[]>(() => {
+    const counts = new Map<string, number>();
+    return this.displayedTags().map((tag) => {
+      const occurrence = counts.get(tag) ?? 0;
+      counts.set(tag, occurrence + 1);
+      return {
+        tag,
+        trackKey: occurrence === 0 ? tag : `${tag}::${occurrence}`,
+      };
+    });
   });
 
   readonly hiddenCount = computed(() => {

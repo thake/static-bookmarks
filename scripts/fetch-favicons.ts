@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 export type FaviconExtension = 'svg' | 'png' | 'ico' | 'webp';
+export type FaviconManifest = Record<string, string | null>;
 
 export interface DownloadedIcon {
   buffer: Buffer;
@@ -14,16 +15,78 @@ export interface RunOptions {
   bookmarksFile?: string;
   faviconsDir?: string;
   manifestFile?: string;
+  retryMissing?: boolean;
 }
 
 export interface RunResult {
-  manifest: Record<string, string>;
+  manifest: FaviconManifest;
   deleted: string[];
 }
 
 const BOOKMARKS_FILE = path.resolve('public/bookmarks.json');
 const FAVICONS_DIR = path.resolve('public/favicons');
 const MANIFEST_FILE = path.resolve('public/favicons.json');
+const MAX_HTML_BYTES = 2 * 1024 * 1024;
+
+const MULTI_TENANT_PUBLIC_SUFFIXES = new Set([
+  'github.io',
+  'gitlab.io',
+  'readthedocs.io',
+  'pages.dev',
+  'workers.dev',
+  'vercel.app',
+  'netlify.app',
+  'web.app',
+  'firebaseapp.com',
+  'fly.dev',
+  'onrender.com',
+  'herokuapp.com',
+  'js.org',
+]);
+
+const CC_SECOND_LEVEL_LABELS = new Set([
+  'co',
+  'com',
+  'org',
+  'net',
+  'edu',
+  'gov',
+  'ac',
+  'or',
+  'ne',
+  'go',
+  'mil',
+  'asn',
+  'id',
+  'gob',
+]);
+
+export function getRegistrableRootDomain(hostname: string): string | null {
+  const normalized = hostname.toLowerCase().replace(/\.$/, '');
+  if (!normalized || /^\d+\.\d+\.\d+\.\d+$/.test(normalized) || normalized.includes(':')) {
+    return null;
+  }
+
+  const parts = normalized.split('.');
+  if (parts.length <= 2) {
+    return null;
+  }
+
+  const lastTwo = parts.slice(-2).join('.');
+  const tld = parts[parts.length - 1];
+  const sld = parts[parts.length - 2];
+
+  const hasTwoPartSuffix =
+    MULTI_TENANT_PUBLIC_SUFFIXES.has(lastTwo) ||
+    (tld.length === 2 && CC_SECOND_LEVEL_LABELS.has(sld));
+
+  const rootLabelCount = hasTwoPartSuffix ? 3 : 2;
+  if (parts.length <= rootLabelCount) {
+    return null;
+  }
+
+  return parts.slice(-rootLabelCount).join('.');
+}
 
 export function detectExtension(contentType: string | null | undefined, buffer: Buffer): FaviconExtension {
   const ct = (contentType || '').toLowerCase();
@@ -91,6 +154,14 @@ export async function downloadIconForUrl(pageUrl: string): Promise<DownloadedIco
     try {
       const pageRes = await fetchWithTimeout(url, 4000);
       if (pageRes.ok) {
+        const ct = (pageRes.headers.get('content-type') || '').toLowerCase();
+        const isHtml = !ct || ct.includes('text/html') || ct.includes('application/xhtml+xml');
+        const contentLength = Number(pageRes.headers.get('content-length') || '0');
+        if (!isHtml || (Number.isFinite(contentLength) && contentLength > MAX_HTML_BYTES)) {
+          await pageRes.body?.cancel().catch(() => {});
+          return null;
+        }
+
         const html = await pageRes.text();
         const hrefs = extractIconHrefsFromHtml(html);
         for (const href of hrefs) {
@@ -103,11 +174,15 @@ export async function downloadIconForUrl(pageUrl: string): Promise<DownloadedIco
                 const ext = detectExtension(iconRes.headers.get('content-type'), buffer);
                 return { buffer, ext };
               }
+            } else {
+              await iconRes.body?.cancel().catch(() => {});
             }
           } catch {
             // Continue to next candidate
           }
         }
+      } else {
+        await pageRes.body?.cancel().catch(() => {});
       }
     } catch {
       // Failed fetching HTML
@@ -141,15 +216,16 @@ export async function downloadIconForUrl(pageUrl: string): Promise<DownloadedIco
         const ext = detectExtension(iconRes.headers.get('content-type'), buffer);
         return { buffer, ext };
       }
+    } else {
+      await iconRes.body?.cancel().catch(() => {});
     }
   } catch {
     // Fallback failed
   }
 
-  // 4. Fallback to root domain if it's a subdomain (e.g. dev.mysql.com -> mysql.com)
-  const parts = parsed.hostname.split('.');
-  if (parts.length > 2) {
-    const rootDomain = parts.slice(-2).join('.');
+  // 4. Fallback to registrable root domain if it's a subdomain (e.g. dev.mysql.com -> mysql.com, skipping gchq.github.io)
+  const rootDomain = getRegistrableRootDomain(parsed.hostname);
+  if (rootDomain) {
     const rootHomeUrl = `${parsed.protocol}//${rootDomain}/`;
     const rootResult = await tryHtmlPage(rootHomeUrl);
     if (rootResult) {
@@ -165,6 +241,8 @@ export async function downloadIconForUrl(pageUrl: string): Promise<DownloadedIco
           const ext = detectExtension(rootRes.headers.get('content-type'), buffer);
           return { buffer, ext };
         }
+      } else {
+        await rootRes.body?.cancel().catch(() => {});
       }
     } catch {
       // Root domain fallback failed
@@ -182,6 +260,8 @@ export async function downloadIconForUrl(pageUrl: string): Promise<DownloadedIco
         const ext = detectExtension(ddgRes.headers.get('content-type'), buffer);
         return { buffer, ext };
       }
+    } else {
+      await ddgRes.body?.cancel().catch(() => {});
     }
   } catch {
     // Icon service fallback failed
@@ -192,10 +272,12 @@ export async function downloadIconForUrl(pageUrl: string): Promise<DownloadedIco
 
 export async function pruneOrphanFavicons(
   faviconsDir: string,
-  activeManifest: Record<string, string>
+  activeManifest: FaviconManifest
 ): Promise<string[]> {
   const activeFilenames = new Set(
-    Object.values(activeManifest).map((filepath) => path.basename(filepath))
+    Object.values(activeManifest)
+      .filter((filepath): filepath is string => typeof filepath === 'string' && filepath.length > 0)
+      .map((filepath) => path.basename(filepath))
   );
 
   let diskFiles: string[] = [];
@@ -221,6 +303,7 @@ export async function run(options: RunOptions = {}): Promise<RunResult> {
   const bookmarksFile = options.bookmarksFile || BOOKMARKS_FILE;
   const faviconsDir = options.faviconsDir || FAVICONS_DIR;
   const manifestFile = options.manifestFile || MANIFEST_FILE;
+  const retryMissing = options.retryMissing === true;
 
   await fs.mkdir(faviconsDir, { recursive: true });
 
@@ -237,15 +320,18 @@ export async function run(options: RunOptions = {}): Promise<RunResult> {
 
   console.log(`[favicons] Ermittle Favicons für ${urls.length} URLs...`);
 
-  // Load existing manifest if present to preserve cache
-  let existingManifest: Record<string, string> = {};
+  // Load existing manifest if present to preserve cache (including cached misses)
+  let existingManifest: FaviconManifest = {};
   try {
-    existingManifest = JSON.parse(await fs.readFile(manifestFile, 'utf-8'));
+    const parsed: unknown = JSON.parse(await fs.readFile(manifestFile, 'utf-8'));
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      existingManifest = parsed as FaviconManifest;
+    }
   } catch {
     existingManifest = {};
   }
 
-  const manifest: Record<string, string> = {};
+  const manifest: FaviconManifest = {};
   const diskFiles = new Set(await fs.readdir(faviconsDir));
   const writtenHashes = new Set<string>();
 
@@ -256,12 +342,16 @@ export async function run(options: RunOptions = {}): Promise<RunResult> {
       const url = queue.shift();
       if (!url) break;
 
-      // Check if already in manifest and file physically exists
-      const existingPath = existingManifest[url];
-      if (existingPath) {
-        const existingFilename = path.basename(existingPath);
-        if (diskFiles.has(existingFilename)) {
-          manifest[url] = existingPath;
+      if (Object.hasOwn(existingManifest, url)) {
+        const existingPath = existingManifest[url];
+        if (typeof existingPath === 'string' && existingPath.length > 0) {
+          const existingFilename = path.basename(existingPath);
+          if (diskFiles.has(existingFilename)) {
+            manifest[url] = existingPath;
+            continue;
+          }
+        } else if (existingPath === null && !retryMissing) {
+          manifest[url] = null;
           continue;
         }
       }
@@ -284,6 +374,7 @@ export async function run(options: RunOptions = {}): Promise<RunResult> {
 
         manifest[url] = `favicons/${filename}`;
       } else {
+        manifest[url] = null;
         console.log(`[favicons] ✕ Kein Favicon gefunden für: ${url}`);
       }
     }
@@ -292,7 +383,7 @@ export async function run(options: RunOptions = {}): Promise<RunResult> {
   await Promise.all(workers);
 
   // Sort manifest keys for clean git diffs
-  const sortedManifest: Record<string, string> = {};
+  const sortedManifest: FaviconManifest = {};
   for (const key of Object.keys(manifest).sort()) {
     sortedManifest[key] = manifest[key];
   }
@@ -310,8 +401,9 @@ export async function run(options: RunOptions = {}): Promise<RunResult> {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  run().catch((err: unknown) => {
+  const retryMissing = process.argv.slice(2).includes('--retry-missing');
+  run({ retryMissing }).catch((err: unknown) => {
     console.error('[favicons] Fehler:', err);
-    process.exit(0);
+    process.exit(1);
   });
 }

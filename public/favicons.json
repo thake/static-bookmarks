@@ -30,6 +30,7 @@
   "https://chaos-mesh.org": "favicons/ad1fd1623433.ico",
   "https://checkstyle.sourceforge.io": "favicons/784a9c9b5bc5.png",
   "https://clickhouse.com/docs": "favicons/17511988438d.png",
+  "https://codesandbox.io": null,
   "https://coil-kt.github.io/coil/": "favicons/c974a5f7c122.ico",
   "https://commons.apache.org": "favicons/df584d061267.png",
   "https://coolors.co": "favicons/9b8fb8687f8b.png",
@@ -63,6 +64,7 @@
   "https://duckdb.org": "favicons/39395cbfe086.png",
   "https://eclipse.dev/collections/": "favicons/02545aec543f.ico",
   "https://eclipse.dev/jetty/": "favicons/981bbee0ea0e.ico",
+  "https://errorprone.info": null,
   "https://excalidraw.com": "favicons/b6a6c4464319.png",
   "https://expressjs.com": "favicons/aa2a703c4d0f.svg",
   "https://fastapi.tiangolo.com": "favicons/d16f72cf5a27.png",
@@ -116,6 +118,7 @@
   "https://k6.io": "favicons/810c17ef7907.png",
   "https://kafka.apache.org": "favicons/d032b5269fbf.png",
   "https://kermit.touchlab.co": "favicons/35ce5005cb02.png",
+  "https://kosi-libs.org/kodein/": null,
   "https://kotest.io": "favicons/77c0109d0509.ico",
   "https://kotlinconf.com": "favicons/dbbf0ff74bfc.png",
   "https://kotlinlang.org/api/core/kotlin-stdlib/": "favicons/275ff90601e5.svg",
@@ -264,5 +267,6 @@
   "https://www.tensorflow.org": "favicons/9d7bc6ff38d3.png",
   "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html": "favicons/a5b6010ffce7.png",
   "https://www.vaultproject.io": "favicons/9382b032a351.ico",
+  "https://www.webpagetest.org": null,
   "https://zustand-demo.pmnd.rs": "favicons/8999d711bd13.png"
 }

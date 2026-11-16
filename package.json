@@ -11,7 +11,8 @@
     "watch": "ng build --watch --configuration development",
     "check:links": "node scripts/check-links.ts",
     "bookmarks:format": "node scripts/format-bookmarks.ts",
-    "test:scripts": "node --test scripts/*.test.ts",
+    "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
+    "test:scripts": "npm run typecheck:scripts && node --test scripts/*.test.ts",
     "test": "npm run test:scripts && ng test",
     "e2e": "playwright test"
   },
@@ -21,9 +22,7 @@
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
     "@angular/core": "^22.0.0",
-    "@angular/forms": "^22.0.0",
     "@angular/platform-browser": "^22.0.0",
-    "@angular/router": "^22.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

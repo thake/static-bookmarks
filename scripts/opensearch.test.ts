@@ -50,4 +50,18 @@ describe('OpenSearch Autodiscovery & Description Specification', () => {
       'src/index.html must include <link rel="search" type="application/opensearchdescription+xml" href="opensearch.xml" ...>',
     );
   });
+
+  it('should have valid public/favicon.ico and public/favicon.svg files matching index.html and opensearch.xml references', () => {
+    const faviconIcoPath = path.join(rootDir, 'public', 'favicon.ico');
+    const faviconSvgPath = path.join(rootDir, 'public', 'favicon.svg');
+
+    assert.ok(fs.existsSync(faviconSvgPath), 'public/favicon.svg must exist');
+    assert.ok(fs.existsSync(faviconIcoPath), 'public/favicon.ico must exist');
+
+    const icoBytes = fs.readFileSync(faviconIcoPath);
+    assert.ok(icoBytes.length > 22, 'favicon.ico must contain ICONDIR header and image data');
+    assert.equal(icoBytes.readUInt16LE(0), 0, 'ICO reserved field must be 0');
+    assert.equal(icoBytes.readUInt16LE(2), 1, 'ICO type field must be 1');
+    assert.ok(icoBytes.readUInt16LE(4) >= 1, 'ICO must contain at least 1 image');
+  });
 });

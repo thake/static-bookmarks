@@ -2,11 +2,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  inject,
   input,
   model,
   output,
   viewChild,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-filter-bar',
@@ -18,8 +20,11 @@ import {
   },
 })
 export class FilterBar {
+  private readonly document = inject(DOCUMENT);
+
   readonly query = model<string>('');
   readonly hasSelection = input<boolean>(false);
+  readonly disabled = input<boolean>(false);
   readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
 
   readonly navigateDown = output<void>();
@@ -68,6 +73,10 @@ export class FilterBar {
   }
 
   onWindowKeydown(event: KeyboardEvent): void {
+    if (this.disabled() || this.document.querySelector('[aria-modal="true"]')) {
+      return;
+    }
+
     const target = event.target as HTMLElement | null;
     const isInputFocused =
       target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
